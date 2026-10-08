@@ -1,0 +1,411 @@
+/* View Mode Switcher in Toolbar */
+.view-mode-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.btn-view-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-view-mode:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-view-mode.active {
+  background: var(--color-surface-hover);
+  color: var(--color-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Catalog Table View Container */
+.catalog-table-wrap {
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+.catalog-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.catalog-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.813rem;
+}
+
+.catalog-data-table th {
+  padding: 12px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  background: rgba(10, 14, 24, 0.65);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.catalog-data-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+  transition: background var(--transition-fast);
+}
+
+.table-row-item {
+  cursor: pointer;
+  outline: none;
+  transition: background var(--transition-fast);
+}
+
+.table-row-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.table-row-item:focus-visible {
+  background: var(--color-surface-hover);
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* Column Specific Styles */
+.th-poster,
+.td-poster {
+  width: 52px;
+  padding-right: 4px;
+}
+
+.table-poster-thumb {
+  position: relative;
+  width: 44px;
+  height: 62px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  background: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.table-poster-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.table-sub-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  background: rgba(6, 78, 59, 0.9);
+  color: #34d399;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.563rem;
+  font-weight: 600;
+  padding: 1px 3px;
+  border-radius: 2px;
+  letter-spacing: 0.02em;
+}
+
+/* Title Column */
+.th-title {
+  min-width: 240px;
+}
+
+.table-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.table-title-ua {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.table-title-orig {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.25;
+}
+
+.table-title-subinfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.table-topic-id {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.688rem;
+  color: var(--color-text-disabled);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.table-topic-id:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.table-topic-id.copied {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-accent);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.table-part-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.688rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  background: rgba(30, 27, 75, 0.7);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+/* Year Column */
+.th-year,
+.td-year {
+  width: 70px;
+  text-align: center;
+}
+
+.table-year-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: #93c5fd;
+}
+
+/* Type Column */
+.th-type {
+  width: 120px;
+}
+
+.table-type-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.table-type-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.688rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.table-type-badge.type-guess {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.table-episodes-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* Quality Column */
+.th-quality,
+.td-quality {
+  width: 90px;
+  text-align: center;
+}
+
+.table-quality-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.table-empty-dash {
+  color: var(--color-text-disabled);
+}
+
+/* Dubbing Column */
+.th-dub {
+  min-width: 160px;
+}
+
+.table-dub-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.table-uploader-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.table-voc-teams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.table-voc-pill {
+  font-size: 0.688rem;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  white-space: nowrap;
+}
+
+.table-voc-pill.more {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-muted);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Torrent Column */
+.th-torrent {
+  min-width: 110px;
+}
+
+.table-torrent-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.table-seeders-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #34d399;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.table-seeders-none {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-disabled);
+}
+
+.table-size-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.688rem;
+  color: var(--color-text-muted);
+}
+
+/* Actions Column */
+.th-actions,
+.td-actions {
+  width: 110px;
+  text-align: right;
+}
+
+.table-actions-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.table-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.table-action-btn.btn-copy-link.copied {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-accent);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.table-action-btn.btn-download-torrent {
+  color: var(--color-accent);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.table-action-btn.btn-download-torrent:hover {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+@media (max-width: 900px) {
+  .th-quality,
+  .td-quality,
+  .th-dub,
+  .td-dub {
+    display: none;
+  }
+}

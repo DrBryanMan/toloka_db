@@ -1,0 +1,253 @@
+/* ==========================================================================
+   Toloka Anime Catalog - Poster Downloader & Gallery Styles
+   ========================================================================== */
+
+/* Progress Card */
+.posters-progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(12, 17, 26, 0.7);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: 14px;
+}
+
+.posters-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.posters-progress-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.posters-progress-pct {
+  font-family: var(--font-numeric);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.posters-progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.posters-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981, #22c55e);
+  border-radius: var(--radius-xs);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+}
+
+/* Gallery Section */
+.posters-gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.posters-gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.posters-gallery-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.posters-gallery-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  padding: 2px 8px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: var(--radius-xs);
+  color: var(--color-accent);
+  font-family: var(--font-numeric);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.posters-gallery-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Gallery Grid */
+.posters-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .posters-gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+}
+
+/* Gallery Item Card */
+.posters-gallery-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.posters-gallery-item:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-accent-soft);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.gallery-poster-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  background: #080c12;
+  overflow: hidden;
+}
+
+.gallery-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.posters-gallery-item:hover .gallery-poster-img {
+  transform: scale(1.03);
+}
+
+/* Gallery Badges */
+.gallery-badge-top-left {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(12, 17, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  font-family: var(--font-numeric);
+  font-size: 0.688rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.gallery-badge-top-right {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(12, 17, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  font-family: var(--font-numeric);
+  font-size: 0.688rem;
+  font-weight: 600;
+  color: #94a3b8;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+/* Hover Quick Action Overlay */
+.gallery-hover-action {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all var(--transition-fast);
+  z-index: 3;
+}
+
+.posters-gallery-item:hover .gallery-hover-action {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gallery-btn-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  background: rgba(12, 17, 26, 0.9);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-xs);
+  color: var(--color-accent);
+  font-family: var(--font-base);
+  font-size: 0.688rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: all var(--transition-fast);
+}
+
+.gallery-btn-view:hover {
+  background: var(--color-accent);
+  color: #0b1712;
+}
+
+/* Gallery Content Info */
+.gallery-info {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  gap: 4px;
+}
+
+.gallery-title {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gallery-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.688rem;
+  color: var(--color-text-muted);
+}

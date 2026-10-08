@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Каталог аніме тайтлів — Толока</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Modular Component Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/filters.css">
+  <link rel="stylesheet" href="css/card.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/pagination.css">
+  <link rel="stylesheet" href="css/edit_modal.css">
+  <link rel="stylesheet" href="css/parser.css">
+  <link rel="stylesheet" href="css/posters.css">
+  <link rel="stylesheet" href="css/incomplete.css">
+  <link rel="stylesheet" href="css/table_view.css">
+  <link rel="stylesheet" href="css/fallback_modal.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="page-container header-inner">
+      <div class="brand-group" id="btn-brand-home" role="button" tabindex="0" title="На головну">
+        <div class="brand-icon">
+          <!-- Stylized Toloka Windmill Emblem -->
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="4.5" fill="#ffffff"/>
+            <path d="M16 11.5V3c3 0 5 2 5 5v3.5h-5z" fill="#ffffff" opacity="0.95"/>
+            <path d="M20.5 16H29c0 3-2 5-5 5h-3.5v-5z" fill="#ffffff" opacity="0.95"/>
+            <path d="M16 20.5V29c-3 0-5-2-5-5v-3.5h5z" fill="#ffffff" opacity="0.95"/>
+            <path d="M11.5 16H3c0-3 2-5 5-5h3.5v5z" fill="#ffffff" opacity="0.95"/>
+          </svg>
+        </div>
+        <div class="brand-text-wrap">
+          <span class="brand-title">Толока</span>
+          <span class="brand-subtitle">Каталог релізів</span>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="search" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Шукати за назвою UA / EN, режисером, озвучкою... (натисніть /)"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="search-clear-btn" class="search-clear-btn" aria-label="Очистити пошук">✕</button>
+        </div>
+        <!-- Quick Search Results Dropdown (for non-catalog views) -->
+        <div id="search-quick-dropdown" class="search-quick-dropdown" hidden>
+          <div id="search-quick-results" class="search-quick-results"></div>
+          <div id="search-quick-footer" class="search-quick-footer"></div>
+        </div>
+      </div>
+
+      <!-- Header Actions: Tools Dropdown -->
+      <div class="header-actions">
+        <div class="header-tools-dropdown" id="header-tools-dropdown">
+          <button type="button" class="btn btn-subtle header-tools-trigger" id="btn-tools-trigger" aria-haspopup="true" aria-expanded="false" title="Інструменти та інтеграції">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            <span>Інструменти</span>
+            <svg class="tools-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="header-tools-menu" id="header-tools-menu">
+            <button type="button" class="tools-menu-item" id="btn-menu-parser">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <div class="tools-menu-text">
+                <span class="tools-menu-title">Парсер свіжих роздач</span>
+                <span class="tools-menu-sub">Моніторинг f127 Toloka Dub</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="btn-menu-voc-sync">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+              <div class="tools-menu-text">
+                <span class="tools-menu-title">Зіставлення з VOC-ALL</span>
+                <span class="tools-menu-sub">Синхронізація Hikka, стрімінгів та команд</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="btn-menu-ext-sync">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              <div class="tools-menu-text">
+                <span class="tools-menu-title">Зіставлення баз даних</span>
+                <span class="tools-menu-sub">IMDb, MAL, AniList та Mikai</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="btn-menu-posters">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <div class="tools-menu-text">
+                <span class="tools-menu-title">Завантаження постерів</span>
+                <span class="tools-menu-sub">Кешування зображень та жива галерея</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="btn-menu-incomplete">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              <div class="tools-menu-text">
+                <span class="tools-menu-title">Незаповнені дані</span>
+                <span class="tools-menu-sub">Таблиця тайтлів з пропущеними полями</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="btn-menu-fallback">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <div class="tools-menu-text">
+                <span class="tools-menu-title">JSON фолбек бази даних</span>
+                <span class="tools-menu-sub">Створення та експорт резервного JSON</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Catalog Content View -->
+  <main class="page-container content-area" id="catalog-view">
+    <!-- Filter Controls Bar -->
+    <section class="filters-section" aria-label="Панель фільтрів та сортування">
+      <!-- Filters Bar with stats-pill as the FIRST section -->
+      <div class="filters-bar">
+        <!-- 1. Stats Counter (first section) -->
+        <div class="stats-pill-section">
+          <div class="stats-pill">
+            <span class="stats-pill-label">Знайдено:</span>
+            <span id="header-total-count" class="stats-count counter">4 124</span>
+          </div>
+        </div>
+
+        <div class="filter-controls-row">
+          <!-- Years Custom Select -->
+          <div class="filter-select-group">
+            <span class="filter-label" id="label-year">Рік виходу</span>
+            <div class="custom-select" id="custom-select-year" data-name="year">
+              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-year">
+                <span class="custom-select-value">Усі роки</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="custom-select-dropdown" role="listbox">
+                <div class="custom-select-options" id="options-year"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Custom Select -->
+          <div class="filter-select-group">
+            <span class="filter-label" id="label-quality">Якість</span>
+            <div class="custom-select" id="custom-select-quality" data-name="quality">
+              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-quality">
+                <span class="custom-select-value">Будь-яка якість</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="custom-select-dropdown" role="listbox">
+                <div class="custom-select-options" id="options-quality"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dubbing / Team Custom Select -->
+          <div class="filter-select-group">
+            <span class="filter-label" id="label-team">Озвучення / Переклад</span>
+            <div class="custom-select" id="custom-select-team" data-name="team">
+              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-team">
+                <span class="custom-select-value">Всі команди</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="custom-select-dropdown" role="listbox">
+                <div class="custom-select-options" id="options-team"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Type Custom Select -->
+          <div class="filter-select-group">
+            <span class="filter-label" id="label-type">Тип</span>
+            <div class="custom-select" id="custom-select-type" data-name="type">
+              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-type">
+                <span class="custom-select-value">Усі типи</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="custom-select-dropdown" role="listbox">
+                <div class="custom-select-options" id="options-type"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtitles Custom Select -->
+          <div class="filter-select-group">
+            <span class="filter-label" id="label-sub">Субтитри</span>
+            <div class="custom-select" id="custom-select-sub" data-name="sub">
+              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sub">
+                <span class="custom-select-value">Всі релізи</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="custom-select-dropdown" role="listbox">
+                <div class="custom-select-options" id="options-sub"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sort Custom Select -->
+        <div class="filter-select-group">
+          <span class="filter-label" id="label-sort">Сортування</span>
+          <div class="custom-select" id="custom-select-sort" data-name="sort">
+            <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sort">
+              <span class="custom-select-value">Найновіші спочатку</span>
+              <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="custom-select-dropdown" role="listbox">
+              <div class="custom-select-options" id="options-sort"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View Mode Switcher: Grid vs Table -->
+        <div class="view-mode-toggle-group">
+          <span class="filter-label">Вигляд</span>
+          <div class="view-mode-toggle" id="view-mode-toggle" role="group" aria-label="Вигляд каталогу">
+            <button type="button" class="btn-view-mode active" id="btn-view-grid" title="Сітка карток" aria-pressed="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button type="button" class="btn-view-mode" id="btn-view-table" title="Табличний вигляд" aria-pressed="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Multi-Select Genre Pills Bar (wrapped flex, placed below filters bar) -->
+      <div class="genre-pills-bar" id="genre-pills" role="group" aria-label="Фільтр за жанрами">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- 3. Active Filters Row (without search query, genres summarized as count) -->
+      <div id="active-filters-row" class="active-filters-row"></div>
+    </section>
+
+    <!-- Title Cards Grid -->
+    <section id="catalog-grid" class="catalog-grid" aria-label="Список аніме тайтлів"></section>
+
+    <!-- Title Table View -->
+    <section id="catalog-table-wrap" class="catalog-table-wrap" hidden aria-label="Таблиця аніме тайтлів"></section>
+
+    <!-- VOC-ALL Styled Floating Sticky Pagination -->
+    <div class="pagination-wrap" id="pagination-wrapper"></div>
+  </main>
+
+  <!-- Separate Dedicated Parser View Page -->
+  <main class="page-container content-area" id="parser-view" hidden>
+    <div class="parser-view-header">
+      <button type="button" class="btn btn-subtle" id="btn-parser-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Повернутися до каталогу</span>
+      </button>
+      <div class="parser-title-group">
+        <h2 class="parser-view-title">Парсер свіжих роздач Toloka Dub</h2>
+        <span class="parser-view-subtitle">Моніторинг розділу озвученого аніме (f127)</span>
+      </div>
+    </div>
+
+    <!-- Parser Controls Card -->
+    <div class="parser-control-card">
+      <div class="parser-control-row">
+        <div class="parser-control-group">
+          <label class="parser-control-label" for="parser-pages-select">Кількість сторінок для сканування:</label>
+          <select id="parser-pages-select" class="parser-pages-select">
+            <option value="1">1 сторінка (останні ~90 роздач)</option>
+            <option value="2">2 сторінки (~180 роздач)</option>
+            <option value="3">3 сторінки (~270 роздач)</option>
+            <option value="all">Всі (~48 сторінок / вся база)</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-start-parse" id="btn-start-parse">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Запустити парсинг</span>
+        </button>
+
+        <button type="button" class="btn btn-subtle btn-sync-catalog" id="btn-sync-catalog">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+          <span>Оновити дані каталогу</span>
+        </button>
+      </div>
+
+      <!-- Enrichment Control Row -->
+      <div class="parser-control-row parser-enrich-row">
+        <div class="parser-control-group">
+          <label class="parser-control-label" for="parser-enrich-count">Збагачення роздач даними:</label>
+          <select id="parser-enrich-count" class="parser-pages-select">
+            <option value="20">20 роздач</option>
+            <option value="50">50 роздач</option>
+            <option value="100">100 роздач</option>
+            <option value="99999">Всі неповні роздачі</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-accent btn-enrich-releases" id="btn-enrich-releases">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          <span>Збагатити даними роздачі</span>
+        </button>
+
+        <div class="parser-incomplete-badge-wrap">
+          <span class="parser-incomplete-label">Неповних роздач у БД:</span>
+          <strong id="parser-incomplete-count" class="counter">...</strong>
+        </div>
+      </div>
+
+      <div class="parser-status-bar">
+        <div class="parser-status-indicator" id="parser-status-indicator">
+          <span class="status-dot"></span>
+          <span id="parser-status-text">Готовий до роботи</span>
+        </div>
+        <div class="parser-stats-summary" id="parser-stats-summary">
+          <span>Опрацьовано: <strong id="parser-scraped-count" class="counter">0</strong></span>
+          <span>Нових знайдено: <strong id="parser-new-count" class="counter">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Console Output -->
+    <div class="parser-console-section">
+      <div class="parser-console-header">
+        <span>Консоль процесу:</span>
+        <button type="button" class="btn-clear-console" id="btn-clear-console">Очистити</button>
+      </div>
+      <div class="parser-console-logs" id="parser-console-logs">
+        <div class="log-line info">[Система] Парсер готовий. Натисніть «Запустити парсинг» для перевірки розділу Toloka Dub.</div>
+      </div>
+    </div>
+
+    <!-- Parser Scraped Items Results -->
+    <div class="parser-results-section" id="parser-results-section">
+      <div class="parser-results-header">
+        <h3 class="parser-results-title">Знайдені роздачі</h3>
+        <div class="parser-filter-pills" id="parser-filter-pills">
+          <button type="button" class="parser-filter-btn active" id="btn-filter-new" data-filter="new" title="Показати лише нові релізи">
+            <span>Тільки нові</span>
+            <span class="parser-filter-badge" id="badge-filter-new">0</span>
+          </button>
+          <button type="button" class="parser-filter-btn" id="btn-filter-all" data-filter="all" title="Показати всі оброблені релізи">
+            <span>Всі оброблені</span>
+            <span class="parser-filter-badge" id="badge-filter-all">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="parser-results-grid" id="parser-results-grid">
+        <div class="parser-empty-msg">Тут з'являться результати після запуску парсингу.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Separate Dedicated VOC-ALL Sync View Page -->
+  <main class="page-container content-area" id="voc-sync-view" hidden>
+    <div class="parser-view-header">
+      <button type="button" class="btn btn-subtle" id="btn-voc-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Повернутися до каталогу</span>
+      </button>
+      <div class="parser-title-group">
+        <h2 class="parser-view-title">Зіставлення з VOC-ALL</h2>
+        <span class="parser-view-subtitle">Співставлення релізів, підтягування Hikka, стрімінгів та студій озвучення</span>
+      </div>
+    </div>
+
+    <!-- Controls Card -->
+    <div class="parser-control-card">
+      <div class="parser-control-row">
+        <button type="button" class="btn btn-primary btn-start-parse" id="btn-start-voc-sync">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+          <span>Запустити зіставлення</span>
+        </button>
+
+        <button type="button" class="btn btn-subtle btn-sync-catalog" id="btn-voc-sync-catalog">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Перебудувати каталог (data/catalog.js)</span>
+        </button>
+      </div>
+
+      <div class="parser-status-bar">
+        <div class="parser-status-indicator" id="voc-status-indicator">
+          <span class="status-dot"></span>
+          <span id="voc-status-text">Готовий до запуску</span>
+        </div>
+        <div class="parser-stats-summary" id="voc-stats-summary">
+          <span>Всього тем: <strong id="voc-stat-total" class="counter">...</strong></span>
+          <span>Зіставлено в VOC: <strong id="voc-stat-matched" class="counter">0</strong></span>
+          <span>MyAnimeList: <strong id="voc-stat-mal" class="counter">0</strong></span>
+          <span>Hikka посилань: <strong id="voc-stat-hikka" class="counter">0</strong></span>
+          <span>Стрімінгів: <strong id="voc-stat-streams" class="counter">0</strong></span>
+          <span>Визначено типів: <strong id="voc-stat-types" class="counter">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Console Output -->
+    <div class="parser-console-section">
+      <div class="parser-console-header">
+        <span>Консоль інтеграції VOC-ALL:</span>
+        <button type="button" class="btn-clear-console" id="btn-clear-voc-console">Очистити</button>
+      </div>
+      <div class="parser-console-logs" id="voc-console-logs">
+        <div class="log-line info">[Система] Модуль інтеграції готовий. Натисніть «Запустити зіставлення» для співставлення бази з VOC-ALL.</div>
+      </div>
+    </div>
+
+    <!-- VOC Matched Results -->
+    <div class="parser-results-section" id="voc-results-section">
+      <div class="parser-results-header">
+        <h3 class="parser-results-title">Зіставлені релізи</h3>
+        <div class="parser-filter-pills" id="voc-filter-pills">
+          <button type="button" class="parser-filter-btn active" id="btn-voc-filter-new" data-filter="new" title="Показати лише нові релізи">
+            <span>Тільки нові</span>
+            <span class="parser-filter-badge" id="badge-voc-filter-new">0</span>
+          </button>
+          <button type="button" class="parser-filter-btn" id="btn-voc-filter-all" data-filter="all" title="Показати всі оброблені релізи">
+            <span>Всі оброблені</span>
+            <span class="parser-filter-badge" id="badge-voc-filter-all">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="parser-results-grid" id="voc-results-grid">
+        <div class="parser-empty-msg">Тут з'являться результати зіставлення.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Dedicated External Databases Sync View Page -->
+  <main class="page-container content-area" id="ext-sync-view" hidden>
+    <div class="parser-view-header">
+      <button type="button" class="btn btn-subtle" id="btn-ext-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Повернутися до каталогу</span>
+      </button>
+      <div class="parser-title-group">
+        <h2 class="parser-view-title">Зіставлення баз даних</h2>
+        <span class="parser-view-subtitle">Синхронізація ID: MyAnimeList, IMDb, AniList та Hikka через Mikai API</span>
+      </div>
+    </div>
+
+    <!-- Controls Card -->
+    <div class="parser-control-card">
+      <div class="parser-control-row">
+        <button type="button" class="btn btn-primary btn-start-parse" id="btn-start-ext-sync">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Зіставити ID баз даних</span>
+        </button>
+
+        <div class="parser-control-group">
+          <label class="parser-control-label" for="ext-mikai-mode">Кеш Mikai API:</label>
+          <select id="ext-mikai-mode" class="parser-pages-select">
+            <option value="ongoing">Тільки онгоїнґи (швидко)</option>
+            <option value="full">Повний каталог (~3 600 тайтлів)</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-subtle" id="btn-refresh-mikai">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Оновити кеш Mikai</span>
+        </button>
+
+        <button type="button" class="btn btn-subtle btn-sync-catalog" id="btn-ext-sync-catalog">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Перебудувати каталог</span>
+        </button>
+      </div>
+
+      <div class="parser-status-bar">
+        <div class="parser-status-indicator" id="ext-status-indicator">
+          <span class="status-dot"></span>
+          <span id="ext-status-text">Готовий до запуску</span>
+        </div>
+        <div class="parser-stats-summary" id="ext-stats-summary">
+          <span>Всього тем: <strong id="ext-stat-total" class="counter">...</strong></span>
+          <span>MyAnimeList: <strong id="ext-stat-mal" class="counter">0</strong></span>
+          <span>IMDb: <strong id="ext-stat-imdb" class="counter">0</strong></span>
+          <span>AniList: <strong id="ext-stat-al" class="counter">0</strong></span>
+          <span>Hikka: <strong id="ext-stat-hikka" class="counter">0</strong></span>
+          <span>Оновлено: <strong id="ext-stat-updated" class="counter">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Console Output -->
+    <div class="parser-console-section">
+      <div class="parser-console-header">
+        <span>Консоль процесу:</span>
+        <button type="button" class="btn-clear-console" id="btn-clear-ext-console">Очистити</button>
+      </div>
+      <div class="parser-console-logs" id="ext-console-logs">
+        <div class="log-line info">[Система] Модуль зіставлення баз даних готовий. Натисніть «Зіставити ID баз даних».</div>
+      </div>
+    </div>
+
+    <!-- External Matched Results -->
+    <div class="parser-results-section" id="ext-results-section">
+      <div class="parser-results-header">
+        <h3 class="parser-results-title">Опрацьовані тайтли</h3>
+        <div class="parser-filter-pills" id="ext-filter-pills">
+          <button type="button" class="parser-filter-btn active" id="btn-ext-filter-new" data-filter="new" title="Показати лише нові/оновлені релізи">
+            <span>Тільки нові</span>
+            <span class="parser-filter-badge" id="badge-ext-filter-new">0</span>
+          </button>
+          <button type="button" class="parser-filter-btn" id="btn-ext-filter-all" data-filter="all" title="Показати всі оброблені релізи">
+            <span>Всі оброблені</span>
+            <span class="parser-filter-badge" id="badge-ext-filter-all">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="parser-results-grid" id="ext-results-grid">
+        <div class="parser-empty-msg">Тут з'являться результати зіставлення.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Posters Downloader and Gallery View -->
+  <main class="page-container content-area" id="posters-view" hidden>
+    <!-- View Header -->
+    <div class="parser-view-header">
+      <div class="parser-view-title-group">
+        <button type="button" class="btn btn-subtle btn-back-catalog" id="btn-posters-back" title="Повернутися до каталогу">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>До каталогу</span>
+        </button>
+        <h2 class="parser-view-title">Кешування та завантаження постерів</h2>
+        <span class="parser-view-subtitle">Локальне збереження зображень для миттєвого завантаження та автономного доступу</span>
+      </div>
+    </div>
+
+    <!-- Controls Card -->
+    <div class="parser-control-card">
+      <div class="parser-control-row">
+        <button type="button" class="btn btn-primary btn-start-parse" id="btn-start-posters-batch">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Завантажити порцію (100)</span>
+        </button>
+
+        <button type="button" class="btn btn-subtle" id="btn-start-posters-all">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+            <path d="M12 12v9"></path>
+            <path d="m8 17 4 4 4-4"></path>
+          </svg>
+          <span>Завантажити всі відсутні</span>
+        </button>
+
+        <button type="button" class="btn btn-subtle" id="btn-stop-posters" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="12" height="12"></rect>
+          </svg>
+          <span>Зупинити</span>
+        </button>
+
+        <button type="button" class="btn btn-subtle btn-sync-catalog" id="btn-posters-sync-catalog">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Перебудувати каталог</span>
+        </button>
+      </div>
+
+      <!-- Progress and Status Bar -->
+      <div class="posters-progress-card">
+        <div class="posters-progress-header">
+          <div class="posters-progress-status" id="posters-status-indicator">
+            <span class="status-dot"></span>
+            <span id="posters-status-text">Готовий до запуску</span>
+          </div>
+          <div class="posters-progress-pct" id="posters-progress-pct">0%</div>
+        </div>
+        <div class="posters-progress-bar-track">
+          <div class="posters-progress-bar-fill" id="posters-progress-bar-fill"></div>
+        </div>
+        <div class="parser-stats-summary" id="posters-stats-summary">
+          <span>Всього тайтлів: <strong id="posters-stat-total" class="counter">4 150</strong></span>
+          <span>Вже на диску: <strong id="posters-stat-local" class="counter">0</strong></span>
+          <span>Залишилось: <strong id="posters-stat-missing" class="counter">4 150</strong></span>
+          <span>Завантажено в сесії: <strong id="posters-stat-session" class="counter">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Console Output -->
+    <div class="parser-console-section">
+      <div class="parser-console-header">
+        <span>Консоль завантаження постерів:</span>
+        <button type="button" class="btn-clear-console" id="btn-clear-posters-console">Очистити</button>
+      </div>
+      <div class="parser-console-logs" id="posters-console-logs">
+        <div class="log-line info">[Система] Модуль кешування готовий. Оберіть «Завантажити порцію» або «Завантажити всі відсутні».</div>
+      </div>
+    </div>
+
+    <!-- Live Gallery Section -->
+    <div class="posters-gallery-section" id="posters-gallery-section">
+      <div class="posters-gallery-header">
+        <h3 class="posters-gallery-title">
+          <span>Галерея нових завантажених постерів</span>
+          <span class="posters-gallery-count" id="posters-gallery-count">0</span>
+        </h3>
+        <div class="posters-gallery-filters">
+          <button type="button" class="parser-filter-btn active" id="btn-gallery-filter-session">Ця сесія</button>
+          <button type="button" class="parser-filter-btn" id="btn-gallery-filter-all">Усі наявні на диску</button>
+        </div>
+      </div>
+      <div class="posters-gallery-grid" id="posters-gallery-grid">
+        <div class="parser-empty-msg">Тут з'являтимуться нові завантажені постери у реальному часі.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Separate Dedicated Incomplete Data View Page -->
+  <main class="page-container content-area" id="incomplete-view" hidden>
+    <div class="parser-view-header">
+      <button type="button" class="btn btn-subtle" id="btn-incomplete-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Повернутися до каталогу</span>
+      </button>
+      <div class="parser-title-group">
+        <h2 class="parser-view-title">Тайтли з незаповненими даними</h2>
+        <span class="parser-view-subtitle">Швидкий перегляд, інлайн-редагування та збагачення відсутніх полів</span>
+      </div>
+    </div>
+
+    <!-- Incomplete View Controls Bar -->
+    <div class="incomplete-toolbar">
+      <div class="incomplete-filters-group">
+        <button type="button" class="incomplete-filter-pill active" data-filter="all">Всі неповні (<span id="incomplete-count-all">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="movie_guess">Можливо фільм (<span id="incomplete-count-movie_guess">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="year">Без року (<span id="incomplete-count-year">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="director">Без режисера (<span id="incomplete-count-director">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="studio">Без студії (<span id="incomplete-count-studio">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="country">Без країни (<span id="incomplete-count-country">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="genres">Без жанрів (<span id="incomplete-count-genres">0</span>)</button>
+        <button type="button" class="incomplete-filter-pill" data-filter="poster">Без постера (<span id="incomplete-count-poster">0</span>)</button>
+      </div>
+
+      <div class="incomplete-search-wrap">
+        <input type="text" id="incomplete-search-input" class="incomplete-search-input" placeholder="Пошук за назвою або ID...">
+      </div>
+
+      <div class="incomplete-toolbar-actions">
+        <button type="button" class="btn btn-primary btn-save-all-incomplete" id="btn-save-all-incomplete" disabled title="Зберегти всі відредаговані рядки">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Зберегти всі зміни (<span id="incomplete-changed-count">0</span>)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="incomplete-table-card">
+      <div class="table-responsive">
+        <table class="incomplete-table" id="incomplete-table">
+          <thead>
+            <tr>
+              <th class="incomplete-th-id">ID</th>
+              <th class="incomplete-th-poster">Постер</th>
+              <th>Назва</th>
+              <th>Відсутні поля</th>
+              <th class="incomplete-th-year">Рік</th>
+              <th class="incomplete-th-country">Країна</th>
+              <th class="incomplete-th-director">Режисер</th>
+              <th class="incomplete-th-studio">Студія</th>
+              <th class="incomplete-th-actions">Дії</th>
+            </tr>
+          </thead>
+          <tbody id="incomplete-table-body">
+            <!-- Dynamic rows rendered via incompleteView.js -->
+          </tbody>
+        </table>
+      </div>
+      <div class="incomplete-table-footer" id="incomplete-table-footer">
+        <span id="incomplete-shown-stats">Показано 0 тайтлів</span>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- Title Details Modal Dialog -->
+  <dialog id="title-modal" class="title-modal" aria-labelledby="modal-title">
+    <div class="modal-inner"></div>
+  </dialog>
+
+  <!-- Edit Title Modal Dialog -->
+  <dialog id="edit-title-modal" class="edit-modal" aria-labelledby="edit-modal-title">
+    <div class="edit-modal-inner">
+      <div class="edit-modal-header">
+        <h3 class="edit-modal-title" id="edit-modal-title">Редагування тайтлу</h3>
+        <button type="button" class="edit-modal-close-btn" id="btn-close-edit-modal" aria-label="Закрити">✕</button>
+      </div>
+      <form id="edit-title-form" class="edit-title-form">
+        <input type="hidden" id="edit-id" name="id">
+
+        <div class="edit-form-grid">
+          <div class="edit-field full-width">
+            <label for="edit-title-ua">Українська назва</label>
+            <input type="text" id="edit-title-ua" name="title_ua" required>
+          </div>
+
+          <div class="edit-field full-width">
+            <label for="edit-title-orig">Оригінальна назва (ромадзі / англ.)</label>
+            <input type="text" id="edit-title-orig" name="title_orig">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-year">Рік випуску</label>
+            <input type="number" id="edit-year" name="year" min="1950" max="2030">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-type">Тип</label>
+            <select id="edit-type" name="type" class="edit-select">
+              <option value="tv">Серіал (TV)</option>
+              <option value="movie">Фільм (Movie)</option>
+              <option value="movie?">Можливо фільм (movie?)</option>
+              <option value="ova">OVA / OAV</option>
+              <option value="ona">ONA</option>
+              <option value="special">Спешл (Special)</option>
+            </select>
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-quality">Якість</label>
+            <input type="text" id="edit-quality" name="quality">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-episodes">Кількість серій</label>
+            <input type="number" id="edit-episodes" name="episodes" min="1">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-duration">Тривалість</label>
+            <input type="text" id="edit-duration" name="duration" placeholder="~24 хв, 01:45:00...">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-studio">Студія</label>
+            <input type="text" id="edit-studio" name="studio">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-director">Режисер</label>
+            <input type="text" id="edit-director" name="director">
+          </div>
+
+          <div class="edit-field">
+            <label for="edit-country">Країна</label>
+            <input type="text" id="edit-country" name="country">
+          </div>
+
+          <div class="edit-field full-width">
+            <label for="edit-poster">URL постера</label>
+            <input type="url" id="edit-poster" name="poster" placeholder="https://...">
+          </div>
+
+          <div class="edit-field full-width">
+            <label for="edit-genres">Жанри (через кому)</label>
+            <input type="text" id="edit-genres" name="genres" placeholder="комедія, пригоди, фентезі...">
+          </div>
+
+          <div class="edit-field full-width">
+            <label for="edit-synopsis">Синопсис / Опис</label>
+            <textarea id="edit-synopsis" name="synopsis" rows="5"></textarea>
+          </div>
+        </div>
+
+        <div class="edit-modal-footer">
+          <button type="button" class="btn btn-subtle" id="btn-cancel-edit">Скасувати</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-edit">Зберегти зміни</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Toloka Login Dialog Modal -->
+  <dialog id="toloka-login-modal" class="toloka-login-modal" aria-labelledby="login-modal-title">
+    <div class="login-modal-inner">
+      <div class="login-modal-header">
+        <h3 class="login-modal-title" id="login-modal-title">Авторизація Toloka</h3>
+        <button type="button" class="edit-modal-close-btn" id="btn-close-login-modal" aria-label="Закрити">✕</button>
+      </div>
+      <p class="login-modal-desc">
+        Для повного доступу до деяких релізів та завантаження постерів необхідний вхід на форум Toloka.to.
+      </p>
+      <form id="toloka-login-form" class="login-modal-form">
+        <div class="login-field">
+          <label for="toloka-username">Логін або Email</label>
+          <input type="text" id="toloka-username" name="username" autocomplete="username">
+        </div>
+        <div class="login-field">
+          <label for="toloka-password">Пароль</label>
+          <input type="password" id="toloka-password" name="password" autocomplete="current-password">
+        </div>
+        <div class="login-checkbox-group">
+          <input type="checkbox" id="toloka-remember" name="remember" checked>
+          <label for="toloka-remember">Зберегти на час сесії</label>
+        </div>
+        <div class="login-modal-footer">
+          <button type="button" class="btn btn-subtle" id="btn-cancel-login">Пропустити</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-login">Увійти та продовжити</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Fallback JSON Generator Dialog Modal -->
+  <dialog id="fallback-modal" class="fallback-modal" aria-labelledby="fallback-modal-title">
+    <div class="fallback-modal-inner">
+      <div class="fallback-modal-header">
+        <div class="fallback-header-title-group">
+          <div class="fallback-header-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 class="fallback-modal-title" id="fallback-modal-title">JSON фолбек бази даних</h3>
+            <p class="fallback-modal-subtitle">Створення та завантаження автономного каталогу</p>
+          </div>
+        </div>
+        <button type="button" class="fallback-modal-close-btn" id="btn-close-fallback-modal" aria-label="Закрити">✕</button>
+      </div>
+
+      <div class="fallback-modal-body">
+        <div class="fallback-desc-banner">
+          Формує файл <strong>data/catalog_fallback.json</strong> із повним знімком поточної бази даних (<code>toloka.db</code>).
+          Цей файл слугує резервною копією та використовується як автоматичний фолбек, якщо виникне помилка завантаження основної бази даних чи файлу <code>catalog.js</code>.
+        </div>
+
+        <div class="fallback-stats-grid">
+          <!-- DB Card -->
+          <div class="fallback-stat-card">
+            <div class="fallback-stat-card-header">
+              <span class="fallback-stat-card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                </svg>
+                База toloka.db
+              </span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Тайтлів:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-db-count">—</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Розмір:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-db-size">—</span>
+            </div>
+          </div>
+
+          <!-- Lite Card -->
+          <div class="fallback-stat-card">
+            <div class="fallback-stat-card-header">
+              <span class="fallback-stat-card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                Легкий (Lite)
+              </span>
+              <span class="fallback-status-badge" id="fallback-stat-lite-badge">Перевірка...</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Тайтлів:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-lite-count">—</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Розмір:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-lite-size">—</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Оновлено:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-lite-updated">—</span>
+            </div>
+          </div>
+
+          <!-- Full Card -->
+          <div class="fallback-stat-card">
+            <div class="fallback-stat-card-header">
+              <span class="fallback-stat-card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Повний (Full)
+              </span>
+              <span class="fallback-status-badge" id="fallback-stat-full-badge">Перевірка...</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Тайтлів:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-full-count">—</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Розмір:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-full-size">—</span>
+            </div>
+            <div class="fallback-stat-row">
+              <span class="fallback-stat-label">Оновлено:</span>
+              <span class="fallback-stat-value mono-num" id="fallback-stat-full-updated">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Format Selector -->
+        <div class="fallback-format-section">
+          <div class="fallback-format-title">Формат для генерації:</div>
+          <div class="fallback-format-options" id="fallback-format-options">
+            <button type="button" class="fallback-format-pill active" data-format="lite">
+              <span class="fallback-format-pill-title">
+                <span>Легка версія</span>
+                <span class="fallback-format-pill-badge">Швидка</span>
+              </span>
+              <span class="fallback-format-pill-desc">Без списку файлів (~8.7 МБ)</span>
+            </button>
+            <button type="button" class="fallback-format-pill" data-format="full">
+              <span class="fallback-format-pill-title">Повна версія</span>
+              <span class="fallback-format-pill-desc">З усіма файлами (~17.5 МБ)</span>
+            </button>
+            <button type="button" class="fallback-format-pill" data-format="both">
+              <span class="fallback-format-pill-title">Обидві версії</span>
+              <span class="fallback-format-pill-desc">Створити і Full, і Lite</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="fallback-log-header">
+            <span class="fallback-log-label">Журнал операції</span>
+          </div>
+          <div class="fallback-log-box idle" id="fallback-log-box">Очікування дій...</div>
+        </div>
+      </div>
+
+      <div class="fallback-modal-footer">
+        <div class="fallback-footer-actions">
+          <button type="button" class="btn btn-subtle" id="btn-download-fallback-lite" disabled title="Завантажити легкий JSON файл (~8.7 МБ)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Завантажити Lite</span>
+          </button>
+          <button type="button" class="btn btn-subtle" id="btn-download-fallback-full" disabled title="Завантажити повний JSON файл (~17.5 МБ)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Завантажити Full</span>
+          </button>
+        </div>
+        <div class="fallback-footer-actions">
+          <button type="button" class="btn btn-subtle" id="btn-close-fallback-modal-bottom">Закрити</button>
+          <button type="button" class="btn btn-primary" id="btn-generate-fallback-json">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            <span id="btn-generate-fallback-label">Сформувати Lite фолбек</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Pre-indexed Catalog Data -->
+  <script src="data/catalog.js"></script>
+
+  <!-- Application Entry Point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

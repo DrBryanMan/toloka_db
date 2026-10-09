@@ -24,7 +24,7 @@ export function renderTitleCard(titleItem) {
   const typeName = typeLabels[titleItem.type] || titleItem.type?.toUpperCase() || 'TV';
 
   const qualityDisplay = titleItem.quality ? `<span class="poster-badge-quality">${escapeHtml(titleItem.quality.split(' ')[0])}</span>` : '';
-  const subDisplay = titleItem.has_sub ? `<span class="poster-badge-sub" title="Наявні субтитри">SUB</span>` : '';
+  const subDisplay = titleItem.has_sub ? `<span class="poster-badge-sub" title="Наявні субтитри">+SUB</span>` : '';
 
   // Voc Teams Badge for bottom-right corner of poster
   const vocTeamsList = titleItem.voc_teams || titleItem.teams || [];
@@ -44,6 +44,7 @@ export function renderTitleCard(titleItem) {
     <div class="card-poster-wrapper">
       <div class="poster-badges-top-left">
         ${qualityDisplay}
+        ${subDisplay}
         ${titleItem.seeders ? `<span class="poster-badge-seeders" title="Роздають: ${titleItem.seeders}">▲ ${titleItem.seeders}</span>` : ''}
       </div>
       <button type="button" class="card-edit-btn" title="Редагувати тайтл" aria-label="Редагувати">
@@ -53,7 +54,8 @@ export function renderTitleCard(titleItem) {
         </svg>
       </button>
       <div class="poster-badges-bottom-left">
-        ${subDisplay}
+        ${titleItem.is_compilation ? `<span class="poster-badge-compilation" title="Збірник роздачі">Збірник</span>` : ''}
+        ${titleItem.is_compilation_item ? `<span class="poster-badge-compilation-item" title="Частина збірки #${titleItem.parent_id}">Зі збірки</span>` : ''}
       </div>
       ${vocTeamsBadge}
       <img 
@@ -70,6 +72,7 @@ export function renderTitleCard(titleItem) {
       ${titleItem.title_orig ? `<div class="card-title-orig" title="${escapeHtml(titleItem.title_orig)}">${escapeHtml(titleItem.title_orig)}</div>` : ''}
       <div class="card-specs">
         <span class="card-spec-type${isGuess ? ' type-guess' : ''}" title="${isGuess ? 'Тривалість > 50 хв — можливо фільм' : ''}">${escapeHtml(typeName)}</span>
+        ${titleItem.is_compilation ? `<span class="card-spec-compilation" title="Збірник роздачі">Збірник ${titleItem.parts_count ? `(${titleItem.parts_count})` : ''}</span>` : ''}
         ${titleItem.part ? `<span class="card-spec-part">${escapeHtml(titleItem.part)}</span>` : ''}
         ${titleItem.year ? `<span class="card-spec-year">${titleItem.year}</span>` : ''}
         ${titleItem.episodes ? `<span class="card-spec-eps" title="${titleItem.total_episodes && titleItem.total_episodes > titleItem.episodes ? `Наявні ${titleItem.episodes} з ${titleItem.total_episodes} серій` : `Серій: ${titleItem.episodes}`}">${titleItem.total_episodes && titleItem.total_episodes > titleItem.episodes ? `${titleItem.episodes}/${titleItem.total_episodes} еп.` : `${titleItem.episodes} еп.`}</span>` : ''}

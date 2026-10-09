@@ -8,7 +8,8 @@ from backend.tasks.scraper import (
     scraper_state,
     run_background_parse,
     run_background_enrich,
-    enrich_single_topic_sync
+    enrich_single_topic_sync,
+    run_background_compilations_enrich
 )
 from backend.tasks.voc import (
     voc_sync_state,
@@ -27,8 +28,18 @@ from backend.tasks.external_ids import (
     run_background_ext_sync,
     run_background_mikai_refresh
 )
+from backend.tasks.hikka import (
+    hikka_state,
+    refresh_hikka_stats,
+    run_background_hikka_enrich,
+    enrich_single_hikka_sync
+)
+
 from backend.services.titles import (
     get_incomplete_stats,
+    get_incomplete_list,
+    get_compilation_stats,
+    get_compilation_list,
     get_title_by_id,
     update_title,
     batch_update_titles,
@@ -98,10 +109,41 @@ class AppRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(poster_downloader_state.to_dict())
             return
 
+        elif self.path == "/api/hikka/status":
+            if not hikka_state["is_running"]:
+                refresh_hikka_stats()
+            self.send_json(hikka_state.to_dict())
+            return
+
+
         elif self.path == "/api/parser/incomplete-stats":
             try:
                 stats = get_incomplete_stats()
                 self.send_json(stats)
+            except Exception as e:
+                self.send_error_json(str(e), status=500)
+            return
+
+        elif self.path == "/api/parser/incomplete-list":
+            try:
+                data = get_incomplete_list()
+                self.send_json(data)
+            except Exception as e:
+                self.send_error_json(str(e), status=500)
+            return
+
+        elif self.path == "/api/parser/compilations-stats":
+            try:
+                stats = get_compilation_stats()
+                self.send_json(stats)
+            except Exception as e:
+                self.send_error_json(str(e), status=500)
+            return
+
+        elif self.path == "/api/parser/compilations-list":
+            try:
+                data = get_compilation_list()
+                self.send_json(data)
             except Exception as e:
                 self.send_error_json(str(e), status=500)
             return
@@ -165,6 +207,18 @@ class AppRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json({"success": True})
             return
 
+        elif self.path == "/api/parser/enrich-compilations":
+            username = req_data.get("username", "")
+            password = req_data.get("password", "")
+
+            if scraper_state["is_running"]:
+                self.send_error_json("Parser or enricher already running", status=400)
+                return
+
+            threading.Thread(target=run_background_compilations_enrich, args=(username, password), daemon=True).start()
+            self.send_json({"success": True})
+            return
+
         elif self.path == "/api/titles/update":
             try:
                 tid = update_title(req_data)
@@ -214,6 +268,24 @@ class AppRequestHandler(http.server.SimpleHTTPRequestHandler):
             threading.Thread(target=run_background_mikai_refresh, args=(mode,), daemon=True).start()
             self.send_json({"success": True})
             return
+
+        elif self.path == "/api/hikka/enrich":
+            single_id = req_data.get("id") or req_data.get("single_id")
+            if single_id:
+                res = enrich_single_hikka_sync(int(single_id))
+                self.send_json(res, status=200 if res.get("success") else 400)
+                return
+
+            if hikka_state["is_running"]:
+                self.send_error_json("Hikka enrichment already running", status=400)
+                return
+
+            limit = int(req_data.get("limit", 50))
+            filter_type = req_data.get("filter", "all")
+            threading.Thread(target=run_background_hikka_enrich, args=(limit, filter_type), daemon=True).start()
+            self.send_json({"success": True})
+            return
+
 
         elif self.path == "/api/catalog/rebuild":
             rebuild_catalog_sync()

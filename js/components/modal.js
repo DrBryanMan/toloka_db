@@ -295,81 +295,7 @@ function formatSourceValue(val) {
   return formatSingleSourceValue(val.trim());
 }
 
-export function openTitleModal(titleItem, updateHistory = true) {
-  if (!modalElement || !titleItem) return;
-
-  const primaryPoster = titleItem.local_poster || titleItem.poster || getSvgPlaceholder(titleItem.title_ua);
-  const svgPlaceholder = getSvgPlaceholder(titleItem.title_ua);
-
-  // External DB badges
-  const extIds = titleItem.external_ids || {};
-  let extLinksHtml = '';
-  if (extIds.imdb) {
-    extLinksHtml += `<a href="${escapeHtml(extIds.imdb)}" target="_blank" rel="noopener noreferrer" class="external-link-btn imdb" title="Відкрити на IMDb">
-      <img src="img/icons/imdb.ico" class="ext-btn-icon" alt="IMDb">
-      <span>IMDb</span>
-    </a>`;
-  }
-  if (extIds.myanimelist) {
-    extLinksHtml += `<a href="${escapeHtml(extIds.myanimelist)}" target="_blank" rel="noopener noreferrer" class="external-link-btn mal" title="Відкрити на MyAnimeList">
-      <img src="img/icons/myanimelist.ico" class="ext-btn-icon" alt="MyAnimeList">
-      <span>MyAnimeList</span>
-    </a>`;
-  }
-  if (extIds.anilist) {
-    extLinksHtml += `<a href="${escapeHtml(extIds.anilist)}" target="_blank" rel="noopener noreferrer" class="external-link-btn anilist" title="Відкрити на AniList">
-      <img src="img/icons/anilist.ico" class="ext-btn-icon" alt="AniList">
-      <span>AniList</span>
-    </a>`;
-  }
-  if (extIds.anidb) {
-    extLinksHtml += `<a href="${escapeHtml(extIds.anidb)}" target="_blank" rel="noopener noreferrer" class="external-link-btn anidb" title="Відкрити на AniDB">
-      <img src="img/icons/anidb.ico" class="ext-btn-icon" alt="AniDB">
-      <span>AniDB</span>
-    </a>`;
-  }
-  const hikkaUrl = titleItem.hikka_url || extIds.hikka;
-  if (hikkaUrl) {
-    extLinksHtml += `<a href="${escapeHtml(hikkaUrl)}" target="_blank" rel="noopener noreferrer" class="external-link-btn hikka" title="Відкрити на Hikka">
-      <img src="img/icons/hikka.ico" class="ext-btn-icon" alt="Hikka">
-      <span>Hikka</span>
-    </a>`;
-  }
-
-  // Where to watch online section (strictly Anitube and Mikai only)
-  const watchList = (titleItem.where_to_watch || []).filter(item => 
-    item && item.url && (item.id === 'anitube' || item.id === 'mikai')
-  );
-  let watchHtml = '';
-  if (watchList.length > 0) {
-    watchHtml = `
-      <div class="modal-watch-section">
-        <h4 class="modal-section-title">Де дивитись онлайн</h4>
-        <div class="watch-links-group">
-          ${watchList.map(item => `
-            <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="watch-platform-btn" title="Дивитися на ${escapeHtml(item.name)}">
-              <img src="${escapeHtml(item.icon || 'img/icons/' + item.id + '.ico')}" class="watch-platform-icon" alt="${escapeHtml(item.name)}">
-              <span>${escapeHtml(item.name)}</span>
-              <svg class="watch-external-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </a>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // Genres
-  const genresHtml = (titleItem.genres || [])
-    .map(g => `<span class="tag-badge">${escapeHtml(g)}</span>`)
-    .join('');
-
-  // Adaptation and Dubbing team list
-  const teamsList = Array.isArray(titleItem.teams) ? titleItem.teams : [];
-  const adapt = titleItem.adaptation_team || {};
+function renderAdaptationContent(adapt = {}, teamsList = []) {
   const adaptKeys = Object.keys(adapt).filter(k => k !== 'Озвучення VOC' && !k.endsWith(' - переклад') && !k.endsWith(' - команда') && adapt[k]);
   const trackKeys = adaptKeys.filter(k => /^(?:аудіо|субтитри|відео)/i.test(k));
   const sourceKeys = adaptKeys.filter(k => /^джерел/i.test(k));
@@ -530,21 +456,193 @@ export function openTitleModal(titleItem, updateHistory = true) {
     `;
   }
 
-  let adaptHtml = '';
-  if (teamsList.length > 0 || trackKeys.length > 0 || creditKeys.length > 0 || sourceKeys.length > 0) {
-    adaptHtml = `
-      <div class="modal-adaptation-section">
-        <h4 class="modal-section-title">Озвучення та переклад</h4>
-        ${teamsList.length > 0 ? `
-          <div class="modal-teams-badges">
-            ${teamsList.map(t => `<span class="team-badge-pill">${escapeHtml(t)}</span>`).join('')}
-          </div>
-        ` : ''}
-        ${tracksHtml}
-        ${creditsHtml}
-        ${sourcesHtml}
+  return {
+    tracksHtml,
+    creditsHtml,
+    sourcesHtml,
+    trackCount: trackKeys.length,
+    hasContent: (trackKeys.length > 0 || creditKeys.length > 0 || sourceKeys.length > 0)
+  };
+}
+
+export function openTitleModalById(id) {
+  if (!id) return;
+  const numId = Number(id);
+  const catalog = window.TOLOKA_CATALOG?.titles || [];
+  const found = catalog.find(t => t.id === numId || String(t.id) === String(id));
+  if (found) {
+    openTitleModal(found);
+  } else {
+    fetch(`/api/titles/${id}`)
+      .then(res => res.json())
+      .then(item => {
+        if (item && item.id) {
+          openTitleModal(item);
+        }
+      })
+      .catch(err => console.warn('Could not load title by id:', err));
+  }
+}
+
+export function openTitleModal(titleItem, updateHistory = true) {
+  if (!modalElement || !titleItem) return;
+
+  const primaryPoster = titleItem.local_poster || titleItem.poster || getSvgPlaceholder(titleItem.title_ua);
+  const svgPlaceholder = getSvgPlaceholder(titleItem.title_ua);
+
+  // External DB badges
+  const extIds = titleItem.external_ids || {};
+  let extLinksHtml = '';
+  if (extIds.imdb) {
+    extLinksHtml += `<a href="${escapeHtml(extIds.imdb)}" target="_blank" rel="noopener noreferrer" class="external-link-btn imdb" title="Відкрити на IMDb">
+      <img src="img/icons/imdb.ico" class="ext-btn-icon" alt="IMDb">
+      <span>IMDb</span>
+    </a>`;
+  }
+  if (extIds.myanimelist) {
+    extLinksHtml += `<a href="${escapeHtml(extIds.myanimelist)}" target="_blank" rel="noopener noreferrer" class="external-link-btn mal" title="Відкрити на MyAnimeList">
+      <img src="img/icons/myanimelist.ico" class="ext-btn-icon" alt="MyAnimeList">
+      <span>MyAnimeList</span>
+    </a>`;
+  }
+  if (extIds.anilist) {
+    extLinksHtml += `<a href="${escapeHtml(extIds.anilist)}" target="_blank" rel="noopener noreferrer" class="external-link-btn anilist" title="Відкрити на AniList">
+      <img src="img/icons/anilist.ico" class="ext-btn-icon" alt="AniList">
+      <span>AniList</span>
+    </a>`;
+  }
+  if (extIds.anidb) {
+    extLinksHtml += `<a href="${escapeHtml(extIds.anidb)}" target="_blank" rel="noopener noreferrer" class="external-link-btn anidb" title="Відкрити на AniDB">
+      <img src="img/icons/anidb.ico" class="ext-btn-icon" alt="AniDB">
+      <span>AniDB</span>
+    </a>`;
+  }
+  const hikkaUrl = titleItem.hikka_url || extIds.hikka;
+  if (hikkaUrl) {
+    extLinksHtml += `<a href="${escapeHtml(hikkaUrl)}" target="_blank" rel="noopener noreferrer" class="external-link-btn hikka" title="Відкрити на Hikka">
+      <img src="img/icons/hikka.ico" class="ext-btn-icon" alt="Hikka">
+      <span>Hikka</span>
+    </a>`;
+  }
+
+  // Where to watch online section (strictly Anitube and Mikai only)
+  const watchList = (titleItem.where_to_watch || []).filter(item => 
+    item && item.url && (item.id === 'anitube' || item.id === 'mikai')
+  );
+  let watchHtml = '';
+  if (watchList.length > 0) {
+    watchHtml = `
+      <div class="modal-watch-section">
+        <h4 class="modal-section-title">Де дивитись онлайн</h4>
+        <div class="watch-links-group">
+          ${watchList.map(item => `
+            <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="watch-platform-btn" title="Дивитися на ${escapeHtml(item.name)}">
+              <img src="${escapeHtml(item.icon || 'img/icons/' + item.id + '.ico')}" class="watch-platform-icon" alt="${escapeHtml(item.name)}">
+              <span>${escapeHtml(item.name)}</span>
+              <svg class="watch-external-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          `).join('')}
+        </div>
       </div>
     `;
+  }
+
+  // Genres
+  const genresHtml = (titleItem.genres || [])
+    .map(g => `<span class="tag-badge">${escapeHtml(g)}</span>`)
+    .join('');
+
+  // Adaptation and Dubbing team list
+  const teamsList = Array.isArray(titleItem.teams) ? titleItem.teams : [];
+  const adapt = titleItem.adaptation_team || {};
+
+  let adaptHtml = '';
+  if (titleItem.is_compilation && Array.isArray(titleItem.parts) && titleItem.parts.length > 0) {
+    const partsList = titleItem.parts;
+    adaptHtml = `
+      <div class="modal-adaptation-section compilation-mode">
+        <div class="compilation-section-header">
+          <div class="compilation-header-title-wrap">
+            <svg class="compilation-header-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <h4 class="modal-section-title">Озвучення та переклад за тайтлами (${partsList.length})</h4>
+          </div>
+          <button type="button" class="btn-toggle-all-parts" aria-label="Розгорнути або згорнути всі частини">
+            <svg class="toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="7 13 12 18 17 13"></polyline>
+              <polyline points="7 6 12 11 17 6"></polyline>
+            </svg>
+            <span class="btn-toggle-text">Розгорнути всі</span>
+          </button>
+        </div>
+        <div class="compilation-parts-accordion-list">
+          ${partsList.map(part => {
+            const partAdapt = part.adaptation_team || {};
+            const partTeams = Array.isArray(part.voc_teams) ? part.voc_teams : [];
+            const { tracksHtml: partTracks, creditsHtml: partCredits, sourcesHtml: partSources, trackCount } = renderAdaptationContent(partAdapt, partTeams);
+            const partTitle = part.title_ua || part.title;
+            const partYear = part.year ? ` (${part.year})` : '';
+
+            return `
+              <details class="compilation-part-accordion" data-part-id="${part.id}">
+                <summary class="compilation-part-summary">
+                  <span class="part-accordion-icon">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </span>
+                  <span class="part-index-badge numeric">${part.index}</span>
+                  <div class="part-summary-title">
+                    <span class="part-title-text" title="${escapeHtml(partTitle)}">${escapeHtml(partTitle)}</span>
+                    ${partYear ? `<span class="part-year-badge numeric">${escapeHtml(partYear)}</span>` : ''}
+                  </div>
+                  <div class="part-meta-badges">
+                    ${trackCount > 0 ? `<span class="part-tracks-badge numeric">${trackCount} дор.</span>` : ''}
+                    ${partTeams.map(t => `<span class="team-badge-pill">${escapeHtml(t)}</span>`).join('')}
+                  </div>
+                  <button type="button" class="btn-open-part-modal" data-id="${part.id}" title="Відкрити окрему картку тайтла" aria-label="Відкрити окрему картку тайтла">
+                    <span>Картка</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                  </button>
+                </summary>
+                <div class="compilation-part-content">
+                  ${partTracks}
+                  ${partCredits}
+                  ${partSources}
+                </div>
+              </details>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    const { tracksHtml, creditsHtml, sourcesHtml, hasContent } = renderAdaptationContent(adapt, teamsList);
+    if (teamsList.length > 0 || hasContent) {
+      adaptHtml = `
+        <div class="modal-adaptation-section">
+          <h4 class="modal-section-title">Озвучення та переклад</h4>
+          ${teamsList.length > 0 ? `
+            <div class="modal-teams-badges">
+              ${teamsList.map(t => `<span class="team-badge-pill">${escapeHtml(t)}</span>`).join('')}
+            </div>
+          ` : ''}
+          ${tracksHtml}
+          ${creditsHtml}
+          ${sourcesHtml}
+        </div>
+      `;
+    }
   }
 
   // Collapsible episode list
@@ -731,9 +829,22 @@ export function openTitleModal(titleItem, updateHistory = true) {
       </div>
 
       <div class="modal-main">
+        ${titleItem.is_compilation_item && titleItem.parent_id ? `
+          <div class="modal-compilation-parent-banner">
+            <button type="button" class="btn-back-to-parent" data-parent-id="${titleItem.parent_id}" title="Перейти до повної збірки">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span>Зі збірки: <strong>${escapeHtml(titleItem.parent_title || '#' + titleItem.parent_id)}</strong></span>
+            </button>
+          </div>
+        ` : ''}
+
         <div class="modal-header-info">
           <div class="modal-title-meta-line">
             <span class="modal-meta-pill pill-type${titleItem.type === 'movie?' ? ' type-guess' : ''}">${titleItem.type === 'movie?' ? 'Фільм? (можливо)' : (titleItem.type === 'movie' ? 'Фільм' : titleItem.type === 'ova' ? 'OVA' : titleItem.type === 'ona' ? 'ONA' : titleItem.type === 'special' ? 'Спешл' : 'Серіал')}</span>
+            ${titleItem.is_compilation ? `<span class="modal-meta-pill pill-compilation">Збірник ${titleItem.parts ? `(${titleItem.parts.length})` : ''}</span>` : ''}
             ${titleItem.part ? `<span class="modal-part-prefix" title="Частина / Сезон">${escapeHtml(titleItem.part)}</span>` : ''}
             ${titleItem.year ? `<span class="modal-meta-pill pill-year numeric">${titleItem.year}</span>` : ''}
           </div>
@@ -819,11 +930,11 @@ export function openTitleModal(titleItem, updateHistory = true) {
     }
 
     // Attach Toggle All Tracks Handler
-    const toggleAllBtn = modalContent.querySelector('.btn-toggle-all-tracks');
-    if (toggleAllBtn) {
+    const toggleTracksBtn = modalContent.querySelector('.btn-toggle-all-tracks');
+    if (toggleTracksBtn) {
       const accordions = modalContent.querySelectorAll('.track-accordion');
-      const toggleText = toggleAllBtn.querySelector('.btn-toggle-text');
-      const toggleIcon = toggleAllBtn.querySelector('.toggle-icon');
+      const toggleText = toggleTracksBtn.querySelector('.btn-toggle-text');
+      const toggleIcon = toggleTracksBtn.querySelector('.toggle-icon');
 
       const updateBtnState = () => {
         const allOpen = accordions.length > 0 && Array.from(accordions).every(a => a.open);
@@ -831,11 +942,12 @@ export function openTitleModal(titleItem, updateHistory = true) {
         if (toggleIcon) toggleIcon.style.transform = allOpen ? 'rotate(180deg)' : 'rotate(0deg)';
       };
 
-      toggleAllBtn.addEventListener('click', () => {
+      toggleTracksBtn.addEventListener('click', () => {
         const hasClosed = Array.from(accordions).some(a => !a.open);
         accordions.forEach(a => { a.open = hasClosed; });
         updateBtnState();
       });
+
 
       accordions.forEach(a => {
         a.addEventListener('toggle', updateBtnState);
@@ -934,6 +1046,51 @@ export function openTitleModal(titleItem, updateHistory = true) {
           modalIdEl.classList.add('copied');
           setTimeout(() => modalIdEl.classList.remove('copied'), 1400);
         });
+      });
+    }
+
+    // Compilation parts: toggle all accordions
+    const togglePartsBtn = modalContent.querySelector('.btn-toggle-all-parts');
+    if (togglePartsBtn) {
+      togglePartsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const accordions = Array.from(modalContent.querySelectorAll('.compilation-part-accordion'));
+        if (accordions.length === 0) return;
+        const allOpen = accordions.every(acc => acc.open);
+        const shouldOpen = !allOpen;
+        accordions.forEach(acc => { acc.open = shouldOpen; });
+        
+        const textSpan = togglePartsBtn.querySelector('.btn-toggle-text');
+        if (textSpan) {
+          textSpan.textContent = shouldOpen ? 'Згорнути всі' : 'Розгорнути всі';
+        }
+        togglePartsBtn.classList.toggle('all-expanded', shouldOpen);
+      });
+    }
+
+
+    // Compilation parts: open separate title modal
+    const partModalBtns = modalContent.querySelectorAll('.btn-open-part-modal');
+    partModalBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const partId = btn.dataset.id;
+        if (partId) {
+          openTitleModalById(partId);
+        }
+      });
+    });
+
+    // Compilation item: back to parent collection modal
+    const backToParentBtn = modalContent.querySelector('.btn-back-to-parent');
+    if (backToParentBtn) {
+      backToParentBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const parentId = backToParentBtn.dataset.parentId;
+        if (parentId) {
+          openTitleModalById(parentId);
+        }
       });
     }
   }

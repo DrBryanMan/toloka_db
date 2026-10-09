@@ -84,6 +84,8 @@ export function filterAndSortTitles(titles, state) {
     // 7. Search Query (Multi-term matching)
     if (queryTerms.length > 0) {
       const searchCorpus = [
+        item.id ? String(item.id) : '',
+        item.parent_id ? String(item.parent_id) : '',
         item.title_ua || '',
         item.title_orig || '',
         item.raw_title || '',

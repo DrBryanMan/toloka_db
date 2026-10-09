@@ -16,6 +16,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "toloka.db"
 FOR_AGENTS_DIR = BASE_DIR / "for agents"
 
+# Щоденне автооновлення: парсинг -> збірка JSON -> commit & push
+DAILY_SYNC_HOUR = 20
+DAILY_SYNC_MINUTE = 0
+DAILY_SYNC_PAGES = 1
+DAILY_SYNC_FILES = (
+    "data/catalog.js",
+    "data/catalog_fallback.json",
+    "data/catalog_fallback_lite.json",
+)
+
 if str(FOR_AGENTS_DIR) not in sys.path:
     sys.path.insert(0, str(FOR_AGENTS_DIR))
 
@@ -25,7 +35,7 @@ CATALOG_COLS = """
     episode_count, quality, poster_url, download_url, 
     external_ids, adaptation_team, raw_fields, where_to_watch, voc_teams, hikka_url,
     local_poster, episode_list, part, has_sub,
-    files, seeders, torrent_size, registered_at
+    files, seeders, torrent_size, registered_at, is_compilation
 """
 
 def get_toloka_credentials(username="", password=""):

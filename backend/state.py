@@ -10,7 +10,7 @@ class TaskState(MutableMapping):
     Implements MutableMapping so it can be accessed like a dict or copied with dict(state).
     """
     def __init__(self, initial_data=None):
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.log_counter = 0
         self._data = {
             "is_running": False,

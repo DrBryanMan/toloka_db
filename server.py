@@ -19,7 +19,8 @@ from backend.tasks.scraper import (
     scraper_state,
     run_background_parse,
     run_background_enrich,
-    enrich_single_topic_sync
+    enrich_single_topic_sync,
+    run_background_compilations_enrich
 )
 from backend.tasks.voc import (
     voc_sync_state,
@@ -34,7 +35,14 @@ from backend.tasks.external_ids import (
     run_background_ext_sync,
     run_background_mikai_refresh
 )
+from backend.tasks.hikka import (
+    hikka_state,
+    run_background_hikka_enrich,
+    enrich_single_hikka_sync
+)
+from backend.tasks.scheduler import start_daily_scheduler, stop_daily_scheduler
 from backend.handler import AppRequestHandler
+
 
 
 class ThreadingServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -49,11 +57,13 @@ def start_server(port=PORT):
         print(f"Toloka Anime Catalog Server running at:")
         print(f"  http://localhost:{port}")
         print("==================================================")
+        start_daily_scheduler()
         while True:
             try:
                 httpd.serve_forever()
             except KeyboardInterrupt:
                 print("\nStopping server...")
+                stop_daily_scheduler()
                 httpd.server_close()
                 break
             except Exception as e:

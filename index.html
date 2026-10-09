@@ -4,8 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark light">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('toloka_theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        const meta = document.querySelector('meta[name="color-scheme"]');
+        if (meta) meta.content = theme;
+      } catch (e) {}
+    })();
+  </script>
   <title>Каталог аніме тайтлів — Толока</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   
@@ -68,8 +84,25 @@
         </div>
       </div>
 
-      <!-- Header Actions: Tools Dropdown -->
+      <!-- Header Actions: Theme Toggle & Tools Dropdown -->
       <div class="header-actions">
+        <button type="button" class="btn btn-subtle btn-theme-toggle" id="btn-theme-toggle" aria-label="Змінити тему" title="Увімкнути світлу тему">
+          <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
         <div class="header-tools-dropdown" id="header-tools-dropdown">
           <button type="button" class="btn btn-subtle header-tools-trigger" id="btn-tools-trigger" aria-haspopup="true" aria-expanded="false" title="Інструменти та інтеграції">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -352,9 +385,21 @@
           <span>Збагатити даними роздачі</span>
         </button>
 
-        <div class="parser-incomplete-badge-wrap">
+        <button type="button" class="btn btn-subtle btn-enrich-compilations" id="btn-enrich-compilations" title="Знайти та збагатити всі роздачі-збірники на Толоці">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+          <span>Збагатити всі збірники</span>
+        </button>
+
+        <div class="parser-incomplete-badge-wrap" id="parser-incomplete-badge-wrap" role="button" tabindex="0" title="Натисніть для перегляду неповних роздач у списку нижче">
           <span class="parser-incomplete-label">Неповних роздач у БД:</span>
           <strong id="parser-incomplete-count" class="counter">...</strong>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="parser-incomplete-arrow">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </div>
       </div>
 
@@ -393,6 +438,14 @@
           <button type="button" class="parser-filter-btn" id="btn-filter-all" data-filter="all" title="Показати всі оброблені релізи">
             <span>Всі оброблені</span>
             <span class="parser-filter-badge" id="badge-filter-all">0</span>
+          </button>
+          <button type="button" class="parser-filter-btn" id="btn-filter-incomplete" data-filter="incomplete" title="Показати неповні роздачі в базі даних">
+            <span>Неповні у БД</span>
+            <span class="parser-filter-badge" id="badge-filter-incomplete">...</span>
+          </button>
+          <button type="button" class="parser-filter-btn" id="btn-filter-compilations" data-filter="compilations" title="Показати всі роздачі-збірники у базі даних">
+            <span>Збірники</span>
+            <span class="parser-filter-badge" id="badge-filter-compilations">...</span>
           </button>
         </div>
       </div>
@@ -723,6 +776,12 @@
       </div>
 
       <div class="incomplete-toolbar-actions">
+        <button type="button" class="btn-hikka-all-incomplete" id="btn-hikka-all-incomplete" title="Автоматично заповнити відсутні студії, режисерів, жанри, описи та країну через Hikka API">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span id="btn-hikka-all-text">Збагатити через Hikka API</span>
+        </button>
         <button type="button" class="btn btn-primary btn-save-all-incomplete" id="btn-save-all-incomplete" disabled title="Зберегти всі відредаговані рядки">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -732,6 +791,7 @@
           <span>Зберегти всі зміни (<span id="incomplete-changed-count">0</span>)</span>
         </button>
       </div>
+
     </div>
 
     <!-- Table Container -->

@@ -4,6 +4,24 @@
   --font-base: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-numeric: 'DM Mono', monospace;
 
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  --blur-base: blur(24px) saturate(180%);
+  --blur-subtle: blur(12px);
+
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dark Theme (Default) */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
   --color-canvas: #090c12;
   --color-bg-base: #0f1420;
   --color-surface: rgba(21, 28, 42, 0.78);
@@ -30,22 +48,208 @@
   --color-badge-bg: rgba(255, 255, 255, 0.07);
   --color-badge-text: #e2e8f0;
 
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --color-header-bg: rgba(12, 16, 25, 0.82);
+  --color-dropdown-bg: rgba(15, 20, 32, 0.96);
+  --color-dropdown-footer-bg: rgba(0, 0, 0, 0.25);
+  --color-modal-bg: rgba(16, 21, 33, 0.96);
+  --color-modal-sidebar-bg: rgba(11, 15, 24, 0.6);
+  --color-backdrop: rgba(4, 7, 13, 0.75);
+  --color-control-bg: rgba(15, 20, 32, 0.88);
+  --color-control-hover-bg: rgba(22, 30, 48, 0.95);
+  --color-card-subtle-bg: rgba(22, 28, 44, 0.55);
+  --color-chip-bg: rgba(255, 255, 255, 0.05);
+  --color-chip-border: var(--color-border);
+  --color-table-th-bg: rgba(10, 14, 24, 0.65);
+  --color-pagination-bg: rgba(15, 20, 32, 0.94);
+  --color-clear-btn-bg: rgba(255, 255, 255, 0.12);
+  --color-accent-chip-text: #86efac;
+  --color-numeric-meta: #93c5fd;
 
-  --blur-base: blur(24px) saturate(180%);
-  --blur-subtle: blur(12px);
+  --color-track-bg: rgba(22, 28, 44, 0.45);
+  --color-track-bg-hover: rgba(26, 34, 52, 0.55);
+  --color-track-bg-open: rgba(24, 31, 48, 0.65);
+  --color-track-border-open: rgba(255, 255, 255, 0.14);
+
+  --badge-sky-text: #7dd3fc;
+  --badge-sky-bg: rgba(125, 211, 252, 0.12);
+  --badge-sky-border: rgba(125, 211, 252, 0.25);
+
+  --badge-cyan-text: #38bdf8;
+  --badge-cyan-bg: rgba(56, 189, 248, 0.12);
+  --badge-cyan-border: rgba(56, 189, 248, 0.25);
+
+  --badge-blue-text: #93c5fd;
+  --badge-blue-bg: rgba(59, 130, 246, 0.12);
+  --badge-blue-border: rgba(59, 130, 246, 0.25);
+
+  --badge-indigo-text: #a5b4fc;
+  --badge-indigo-bg: rgba(99, 102, 241, 0.15);
+  --badge-indigo-border: rgba(99, 102, 241, 0.35);
+
+  --badge-purple-text: #c4b5fd;
+  --badge-purple-bg: rgba(196, 181, 253, 0.12);
+  --badge-purple-border: rgba(196, 181, 253, 0.25);
+
+  --badge-violet-text: #a78bfa;
+  --badge-violet-bg: rgba(167, 139, 250, 0.12);
+  --badge-violet-border: rgba(167, 139, 250, 0.25);
+
+  --badge-pink-text: #f472b6;
+  --badge-pink-bg: rgba(244, 114, 182, 0.12);
+  --badge-pink-border: rgba(244, 114, 182, 0.25);
+
+  --badge-rose-text: #fda4af;
+  --badge-rose-bg: rgba(253, 164, 175, 0.12);
+  --badge-rose-border: rgba(253, 164, 175, 0.25);
+
+  --badge-green-text: #86efac;
+  --badge-green-bg: rgba(134, 239, 172, 0.12);
+  --badge-green-border: rgba(134, 239, 172, 0.25);
+
+  --badge-emerald-text: #34d399;
+  --badge-emerald-bg: rgba(52, 211, 153, 0.12);
+  --badge-emerald-border: rgba(52, 211, 153, 0.25);
+
+  --badge-teal-text: #5eead4;
+  --badge-teal-bg: rgba(94, 234, 212, 0.12);
+  --badge-teal-border: rgba(94, 234, 212, 0.25);
+
+  --badge-amber-text: #fcd34d;
+  --badge-amber-bg: rgba(252, 211, 77, 0.12);
+  --badge-amber-border: rgba(252, 211, 77, 0.25);
+
+  --badge-orange-text: #fb923c;
+  --badge-orange-bg: rgba(251, 146, 60, 0.12);
+  --badge-orange-border: rgba(251, 146, 60, 0.25);
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 20px var(--color-accent-glow);
 
-  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --color-scrollbar-track: rgba(0, 0, 0, 0.2);
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
+  --body-gradient-1: rgba(22, 101, 52, 0.16);
+  --body-gradient-2: rgba(21, 128, 61, 0.10);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-canvas: #f4f5f8;
+  --color-bg-base: #ffffff;
+  --color-surface: rgba(255, 255, 255, 0.85);
+  --color-surface-solid: #ffffff;
+  --color-surface-elevated: rgba(255, 255, 255, 0.95);
+  --color-surface-hover: rgba(240, 244, 249, 0.95);
+  --color-surface-active: rgba(228, 234, 242, 0.98);
+
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-bright: rgba(0, 0, 0, 0.15);
+  --color-border-accent: rgba(22, 163, 74, 0.45);
+
+  --color-accent: #16a34a;
+  --color-accent-hover: #15803d;
+  --color-accent-active: #166534;
+  --color-accent-soft: rgba(22, 163, 74, 0.12);
+  --color-accent-glow: rgba(22, 163, 74, 0.2);
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-disabled: #94a3b8;
+
+  --color-badge-bg: rgba(0, 0, 0, 0.05);
+  --color-badge-text: #1e293b;
+
+  --color-header-bg: rgba(248, 250, 252, 0.85);
+  --color-dropdown-bg: rgba(255, 255, 255, 0.98);
+  --color-dropdown-footer-bg: rgba(0, 0, 0, 0.04);
+  --color-modal-bg: rgba(255, 255, 255, 0.98);
+  --color-modal-sidebar-bg: rgba(248, 250, 252, 0.85);
+  --color-backdrop: rgba(15, 23, 42, 0.45);
+  --color-control-bg: rgba(255, 255, 255, 0.92);
+  --color-control-hover-bg: rgba(241, 245, 249, 0.98);
+  --color-card-subtle-bg: rgba(241, 245, 249, 0.85);
+  --color-chip-bg: rgba(0, 0, 0, 0.04);
+  --color-chip-border: rgba(0, 0, 0, 0.08);
+  --color-table-th-bg: rgba(241, 245, 249, 0.95);
+  --color-pagination-bg: rgba(255, 255, 255, 0.95);
+  --color-clear-btn-bg: rgba(0, 0, 0, 0.07);
+  --color-accent-chip-text: #15803d;
+  --color-numeric-meta: #0284c7;
+
+  --color-track-bg: rgba(241, 245, 249, 0.7);
+  --color-track-bg-hover: rgba(234, 240, 246, 0.95);
+  --color-track-bg-open: #ffffff;
+  --color-track-border-open: rgba(0, 0, 0, 0.15);
+
+  --badge-sky-text: #0284c7;
+  --badge-sky-bg: rgba(2, 132, 199, 0.08);
+  --badge-sky-border: rgba(2, 132, 199, 0.22);
+
+  --badge-cyan-text: #0284c7;
+  --badge-cyan-bg: rgba(2, 132, 199, 0.08);
+  --badge-cyan-border: rgba(2, 132, 199, 0.22);
+
+  --badge-blue-text: #2563eb;
+  --badge-blue-bg: rgba(37, 99, 235, 0.08);
+  --badge-blue-border: rgba(37, 99, 235, 0.22);
+
+  --badge-indigo-text: #4f46e5;
+  --badge-indigo-bg: rgba(79, 70, 229, 0.08);
+  --badge-indigo-border: rgba(79, 70, 229, 0.22);
+
+  --badge-purple-text: #7c3aed;
+  --badge-purple-bg: rgba(124, 58, 237, 0.08);
+  --badge-purple-border: rgba(124, 58, 237, 0.22);
+
+  --badge-violet-text: #7c3aed;
+  --badge-violet-bg: rgba(124, 58, 237, 0.08);
+  --badge-violet-border: rgba(124, 58, 237, 0.22);
+
+  --badge-pink-text: #db2777;
+  --badge-pink-bg: rgba(219, 39, 119, 0.08);
+  --badge-pink-border: rgba(219, 39, 119, 0.22);
+
+  --badge-rose-text: #e11d48;
+  --badge-rose-bg: rgba(225, 29, 72, 0.08);
+  --badge-rose-border: rgba(225, 29, 72, 0.22);
+
+  --badge-green-text: #16a34a;
+  --badge-green-bg: rgba(22, 163, 74, 0.08);
+  --badge-green-border: rgba(22, 163, 74, 0.22);
+
+  --badge-emerald-text: #059669;
+  --badge-emerald-bg: rgba(5, 150, 105, 0.08);
+  --badge-emerald-border: rgba(5, 150, 105, 0.22);
+
+  --badge-teal-text: #0d9488;
+  --badge-teal-bg: rgba(13, 148, 136, 0.08);
+  --badge-teal-border: rgba(13, 148, 136, 0.22);
+
+  --badge-amber-text: #b45309;
+  --badge-amber-bg: rgba(180, 83, 9, 0.08);
+  --badge-amber-border: rgba(180, 83, 9, 0.22);
+
+  --badge-orange-text: #ea580c;
+  --badge-orange-bg: rgba(234, 88, 12, 0.08);
+  --badge-orange-border: rgba(234, 88, 12, 0.22);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 16px var(--color-accent-glow);
+
+  --color-scrollbar-track: rgba(0, 0, 0, 0.04);
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+
+  --body-gradient-1: rgba(34, 197, 94, 0.07);
+  --body-gradient-2: rgba(21, 128, 61, 0.04);
 }
 
 *, *::before, *::after {
@@ -58,10 +262,10 @@ html {
   font-family: var(--font-base);
   background-color: var(--color-canvas);
   color: var(--color-text-primary);
-  color-scheme: dark;
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 body {
@@ -69,11 +273,12 @@ body {
   display: flex;
   flex-direction: column;
   background: 
-    radial-gradient(circle at 15% 10%, rgba(22, 101, 52, 0.16) 0%, transparent 45%),
-    radial-gradient(circle at 85% 80%, rgba(21, 128, 61, 0.10) 0%, transparent 50%),
+    radial-gradient(circle at 15% 10%, var(--body-gradient-1) 0%, transparent 45%),
+    radial-gradient(circle at 85% 80%, var(--body-gradient-2) 0%, transparent 50%),
     var(--color-canvas);
   background-attachment: fixed;
   overflow-x: hidden;
+  transition: background var(--transition-fast);
 }
 
 /* Numeric text utility */
@@ -93,18 +298,18 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--color-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--color-scrollbar-thumb);
   border-radius: var(--radius-xs);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--color-scrollbar-thumb-hover);
 }
 
 /* Page Layout Container */

@@ -10,18 +10,18 @@ dialog.title-modal {
   padding: 0;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-xl);
-  background: rgba(16, 21, 33, 0.96);
+  background: var(--color-modal-bg);
   color: var(--color-text-primary);
   backdrop-filter: var(--blur-base);
   -webkit-backdrop-filter: var(--blur-base);
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 30px rgba(59, 130, 246, 0.15);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(59, 130, 246, 0.1);
   overflow: hidden;
   outline: none;
   z-index: 1000;
 }
 
 dialog.title-modal::backdrop {
-  background: rgba(4, 7, 13, 0.75);
+  background: var(--color-backdrop);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -40,7 +40,7 @@ dialog.title-modal::backdrop {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   display: flex;
@@ -52,7 +52,8 @@ dialog.title-modal::backdrop {
 }
 
 .modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-bright);
   color: var(--color-text-primary);
 }
 
@@ -64,7 +65,7 @@ dialog.title-modal::backdrop {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  background: rgba(11, 15, 24, 0.6);
+  background: var(--color-modal-sidebar-bg);
   border-right: 1px solid var(--color-border);
   overflow-y: auto;
   container-type: inline-size;
@@ -165,9 +166,9 @@ dialog.title-modal::backdrop {
   margin-bottom: 6px;
   padding: 3px 8px;
   border-radius: var(--radius-xs);
-  background: #182234;
+  background: var(--color-surface-solid);
   border: 1px solid var(--color-border-bright);
-  color: #ffffff;
+  color: var(--color-text-primary);
   font-family: var(--font-base);
   font-size: 0.688rem;
   font-weight: 500;
@@ -198,7 +199,7 @@ dialog.title-modal::backdrop {
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  background: rgba(22, 28, 44, 0.55);
+  background: var(--color-card-subtle-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   flex-shrink: 0;
@@ -269,7 +270,7 @@ dialog.title-modal::backdrop {
   gap: 7px;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  background: rgba(18, 24, 38, 0.7);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   font-size: 0.75rem;
@@ -291,10 +292,22 @@ dialog.title-modal::backdrop {
   background: rgba(245, 197, 24, 0.08);
 }
 
+[data-theme="light"] .external-link-btn.imdb:hover {
+  border-color: rgba(180, 83, 9, 0.4);
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.08);
+}
+
 .external-link-btn.mal:hover {
   border-color: rgba(46, 81, 162, 0.6);
   color: #60a5fa;
   background: rgba(46, 81, 162, 0.12);
+}
+
+[data-theme="light"] .external-link-btn.mal:hover {
+  border-color: rgba(46, 81, 162, 0.5);
+  color: #1e40af;
+  background: rgba(46, 81, 162, 0.08);
 }
 
 .external-link-btn.anilist:hover {
@@ -303,16 +316,34 @@ dialog.title-modal::backdrop {
   background: rgba(2, 169, 255, 0.12);
 }
 
+[data-theme="light"] .external-link-btn.anilist:hover {
+  border-color: rgba(2, 132, 199, 0.5);
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+}
+
 .external-link-btn.anidb:hover {
   border-color: rgba(56, 189, 248, 0.5);
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.08);
 }
 
+[data-theme="light"] .external-link-btn.anidb:hover {
+  border-color: rgba(2, 132, 199, 0.5);
+  color: #0369a1;
+  background: rgba(2, 132, 199, 0.08);
+}
+
 .external-link-btn.hikka:hover {
   border-color: rgba(236, 72, 153, 0.5);
   color: #f472b6;
   background: rgba(236, 72, 153, 0.08);
+}
+
+[data-theme="light"] .external-link-btn.hikka:hover {
+  border-color: rgba(219, 39, 119, 0.5);
+  color: #db2777;
+  background: rgba(219, 39, 119, 0.08);
 }
 
 .ext-btn-icon {
@@ -409,6 +440,39 @@ dialog.title-modal::backdrop {
   gap: 20px;
 }
 
+/* Child compilation item parent link banner */
+.modal-compilation-parent-banner {
+  margin-bottom: -6px;
+}
+
+.btn-back-to-parent {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--badge-blue-bg);
+  border: 1px solid var(--badge-blue-border);
+  color: var(--badge-blue-text);
+  font-family: var(--font-base);
+  font-size: 0.813rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-back-to-parent:hover {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #ffffff;
+  transform: translateX(-2px);
+}
+
+.btn-back-to-parent strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
 .modal-header-info {
   display: flex;
   flex-direction: column;
@@ -438,26 +502,38 @@ dialog.title-modal::backdrop {
 }
 
 .modal-meta-pill.pill-type {
-  background: rgba(59, 130, 246, 0.12);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.28);
+  background: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+  border-color: var(--badge-blue-border);
 }
 
 .modal-meta-pill.pill-type.type-guess {
-  background: rgba(245, 158, 11, 0.12);
-  color: #fcd34d;
-  border-color: rgba(245, 158, 11, 0.28);
+  background: var(--badge-amber-bg);
+  color: var(--badge-amber-text);
+  border-color: var(--badge-amber-border);
+}
+
+.modal-meta-pill.pill-compilation {
+  background: var(--badge-purple-bg);
+  color: var(--badge-purple-text);
+  border-color: var(--badge-purple-border);
+}
+
+.modal-meta-pill.pill-compilation-item {
+  background: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+  border-color: var(--badge-blue-border);
 }
 
 .modal-meta-pill.pill-year {
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
+  background: var(--color-chip-bg);
+  color: var(--color-text-secondary);
   font-family: var(--font-numeric);
 }
 
 .modal-meta-pill.pill-country {
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
+  background: var(--color-chip-bg);
+  color: var(--color-text-secondary);
 }
 
 .modal-part-prefix {
@@ -469,9 +545,9 @@ dialog.title-modal::backdrop {
   font-family: var(--font-numeric);
   font-size: 0.75rem;
   font-weight: 700;
-  color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: var(--badge-indigo-text);
+  background: var(--badge-indigo-bg);
+  border: 1px solid var(--badge-indigo-border);
   border-radius: var(--radius-xs);
   vertical-align: middle;
 }
@@ -486,7 +562,7 @@ dialog.title-modal::backdrop {
 .modal-topic-id {
   font-size: 0.813rem;
   padding: 3px 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-chip-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xs);
   flex-shrink: 0;
@@ -515,10 +591,10 @@ dialog.title-modal::backdrop {
   font-family: var(--font-numeric);
   font-size: 0.688rem;
   color: var(--color-text-disabled);
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--color-chip-bg);
   padding: 6px 10px;
   border-radius: var(--radius-xs);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
   margin-top: 4px;
   word-break: break-all;
 }
@@ -529,7 +605,7 @@ dialog.title-modal::backdrop {
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 12px;
   padding: 16px;
-  background: rgba(22, 28, 44, 0.5);
+  background: var(--color-card-subtle-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
@@ -556,22 +632,22 @@ dialog.title-modal::backdrop {
 
 .meta-field-value.numeric {
   font-family: var(--font-numeric);
-  color: #93c5fd;
+  color: var(--color-numeric-meta);
 }
 
 .meta-field-value.type-guess-text {
-  color: #fbbf24;
+  color: var(--badge-amber-text);
   font-weight: 600;
 }
 
 .meta-field-value.part-badge-text {
-  color: #a5b4fc;
+  color: var(--badge-indigo-text);
   font-weight: 600;
   font-family: var(--font-numeric);
 }
 
 .meta-field-value.sub-badge-text {
-  color: #34d399;
+  color: var(--badge-emerald-text);
   font-weight: 600;
 }
 
@@ -593,7 +669,7 @@ dialog.title-modal::backdrop {
 .modal-synopsis-text {
   font-size: 0.875rem;
   line-height: 1.65;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
   white-space: pre-line;
   max-height: 220px;
   overflow-y: auto;
@@ -623,7 +699,7 @@ dialog.title-modal::backdrop {
   border-radius: var(--radius-xs);
   background: var(--color-accent-soft);
   border: 1px solid var(--color-border-accent);
-  color: #86efac;
+  color: var(--color-accent-chip-text);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -651,7 +727,7 @@ dialog.title-modal::backdrop {
 }
 
 .adaptation-item-person {
-  color: var(--color-text);
+  color: var(--color-text-primary);
   flex: 1;
   padding-left: 1em;
 }
@@ -690,7 +766,7 @@ dialog.title-modal::backdrop {
 
 .track-prop-value.numeric {
   font-family: var(--font-numeric);
-  color: #bae6fd;
+  color: var(--color-numeric-meta);
 }
 
 .track-prop-note {
@@ -702,35 +778,35 @@ dialog.title-modal::backdrop {
 
 /* Muted accent colors for track and subtitle subheadings */
 .track-prop-label.prop-lang {
-  color: #7dd3fc;
+  color: var(--badge-sky-text);
 }
 
 .track-prop-label.prop-trans {
-  color: #86efac;
+  color: var(--badge-green-text);
 }
 
 .track-prop-label.prop-codec {
-  color: #c4b5fd;
+  color: var(--badge-purple-text);
 }
 
 .track-prop-label.prop-bitrate {
-  color: #fcd34d;
+  color: var(--badge-amber-text);
 }
 
 .track-prop-label.prop-type {
-  color: #fda4af;
+  color: var(--badge-rose-text);
 }
 
 .track-prop-label.prop-format {
-  color: #a5b4fc;
+  color: var(--badge-indigo-text);
 }
 
 .track-prop-label.prop-frame {
-  color: #5eead4;
+  color: var(--badge-teal-text);
 }
 
 .track-prop-label.prop-default {
-  color: #93c5fd;
+  color: var(--badge-blue-text);
 }
 
 /* Adaptation Tracks Block */
@@ -764,7 +840,7 @@ dialog.title-modal::backdrop {
   font-size: 0.688rem;
   font-weight: 600;
   color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-chip-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xs);
   cursor: pointer;
@@ -772,7 +848,7 @@ dialog.title-modal::backdrop {
 }
 
 .btn-toggle-all-tracks:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-hover);
   color: var(--color-text-primary);
   border-color: var(--color-border-bright);
 }
@@ -790,7 +866,7 @@ dialog.title-modal::backdrop {
 /* Track Collapsible Accordion */
 .track-accordion {
   border: 1px solid var(--color-border);
-  background: rgba(22, 28, 44, 0.45);
+  background: var(--color-track-bg);
   border-radius: var(--radius-sm);
   overflow: hidden;
   transition: border-color var(--transition-fast), background var(--transition-fast);
@@ -799,12 +875,12 @@ dialog.title-modal::backdrop {
 
 .track-accordion:hover {
   border-color: var(--color-border-bright);
-  background: rgba(26, 34, 52, 0.55);
+  background: var(--color-track-bg-hover);
 }
 
 .track-accordion[open] {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(24, 31, 48, 0.65);
+  border-color: var(--color-track-border-open);
+  background: var(--color-track-bg-open);
 }
 
 .track-summary {
@@ -833,7 +909,7 @@ dialog.title-modal::backdrop {
   width: 16px;
   height: 16px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-chip-bg);
   color: var(--color-text-muted);
   transition: transform var(--transition-fast), color var(--transition-fast);
   flex-shrink: 0;
@@ -842,7 +918,7 @@ dialog.title-modal::backdrop {
 
 .track-accordion[open] .track-summary-icon {
   transform: rotate(90deg);
-  color: #7dd3fc;
+  color: var(--badge-sky-text);
 }
 
 .track-kind-badge {
@@ -861,7 +937,7 @@ dialog.title-modal::backdrop {
 }
 
 .track-accordion[open] .track-kind-badge {
-  color: #7dd3fc;
+  color: var(--badge-sky-text);
   opacity: 1;
 }
 
@@ -915,80 +991,80 @@ dialog.title-modal::backdrop {
 }
 
 .track-badge.badge-lang {
-  background: rgba(125, 211, 252, 0.12);
-  color: #7dd3fc;
-  border: 1px solid rgba(125, 211, 252, 0.25);
+  background: var(--badge-sky-bg);
+  color: var(--badge-sky-text);
+  border: 1px solid var(--badge-sky-border);
 }
 
 .track-badge.badge-codec {
   font-family: var(--font-numeric);
-  background: rgba(196, 181, 253, 0.12);
-  color: #c4b5fd;
-  border: 1px solid rgba(196, 181, 253, 0.25);
+  background: var(--badge-purple-bg);
+  color: var(--badge-purple-text);
+  border: 1px solid var(--badge-purple-border);
 }
 
 .track-badge.badge-res {
   font-family: var(--font-numeric);
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: var(--badge-cyan-bg);
+  color: var(--badge-cyan-text);
+  border: 1px solid var(--badge-cyan-border);
 }
 
 .track-badge.badge-depth {
   font-family: var(--font-numeric);
-  background: rgba(167, 139, 250, 0.12);
-  color: #a78bfa;
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: var(--badge-violet-bg);
+  color: var(--badge-violet-text);
+  border: 1px solid var(--badge-violet-border);
 }
 
 .track-badge.badge-hdr {
   font-family: var(--font-numeric);
-  background: rgba(244, 114, 182, 0.12);
-  color: #f472b6;
-  border: 1px solid rgba(244, 114, 182, 0.25);
+  background: var(--badge-pink-bg);
+  color: var(--badge-pink-text);
+  border: 1px solid var(--badge-pink-border);
 }
 
 .track-badge.badge-trans {
-  background: rgba(134, 239, 172, 0.12);
-  color: #86efac;
-  border: 1px solid rgba(134, 239, 172, 0.25);
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
+  border: 1px solid var(--badge-green-border);
 }
 
 .track-badge.badge-type {
-  background: rgba(253, 164, 175, 0.12);
-  color: #fda4af;
-  border: 1px solid rgba(253, 164, 175, 0.25);
+  background: var(--badge-rose-bg);
+  color: var(--badge-rose-text);
+  border: 1px solid var(--badge-rose-border);
 }
 
 .track-badge.badge-forced {
-  background: rgba(251, 146, 60, 0.12);
-  color: #fb923c;
-  border: 1px solid rgba(251, 146, 60, 0.25);
+  background: var(--badge-orange-bg);
+  color: var(--badge-orange-text);
+  border: 1px solid var(--badge-orange-border);
 }
 
 .track-badge.badge-full {
-  background: rgba(52, 211, 153, 0.12);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  background: var(--badge-emerald-bg);
+  color: var(--badge-emerald-text);
+  border: 1px solid var(--badge-emerald-border);
 }
 
 .track-badge.badge-sdh {
-  background: rgba(252, 211, 77, 0.12);
-  color: #fcd34d;
-  border: 1px solid rgba(252, 211, 77, 0.25);
+  background: var(--badge-amber-bg);
+  color: var(--badge-amber-text);
+  border: 1px solid var(--badge-amber-border);
 }
 
 .track-content-body {
   padding: 8px 12px 10px 36px;
   border-top: 1px solid var(--color-border);
-  background: rgba(15, 20, 32, 0.4);
+  background: var(--color-card-subtle-bg);
 }
 
 /* Audio Dubbing Crew Plate */
 .audio-crew-plate {
   margin-top: 8px;
   margin-bottom: 6px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-card-subtle-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
@@ -1043,7 +1119,7 @@ dialog.title-modal::backdrop {
 /* General Release & Adaptation Credits Card */
 .adaptation-credits-card {
   margin-top: 10px;
-  background: rgba(22, 28, 44, 0.45);
+  background: var(--color-card-subtle-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 16px;
@@ -1068,7 +1144,7 @@ dialog.title-modal::backdrop {
 
 .credits-header-icon {
   opacity: 0.85;
-  color: #a5b4fc;
+  color: var(--badge-indigo-text);
 }
 
 .credits-card-body {
@@ -1111,9 +1187,9 @@ dialog.title-modal::backdrop {
   align-items: center;
   padding: 2px 7px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-chip-bg);
   border: 1px solid var(--color-border);
-  color: #e2e8f0;
+  color: var(--color-text-primary);
   font-family: var(--font-base);
   font-size: 0.75rem;
   font-weight: 500;
@@ -1122,16 +1198,16 @@ dialog.title-modal::backdrop {
 }
 
 .actor-pill:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--color-surface-hover);
   border-color: var(--color-border-bright);
-  color: #ffffff;
+  color: var(--color-text-primary);
   transform: translateY(-1px);
 }
 
 /* Release Sources Card */
 .adaptation-sources-card {
   margin-top: 10px;
-  background: rgba(22, 28, 44, 0.45);
+  background: var(--color-card-subtle-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 16px;
@@ -1156,7 +1232,7 @@ dialog.title-modal::backdrop {
 
 .sources-header-icon {
   opacity: 0.85;
-  color: #38bdf8;
+  color: var(--badge-cyan-text);
 }
 
 .sources-card-body {
@@ -1196,14 +1272,14 @@ dialog.title-modal::backdrop {
   font-family: var(--font-numeric);
   font-size: 0.75rem;
   letter-spacing: -0.01em;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .source-url-link {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #7dd3fc;
+  color: var(--badge-sky-text);
   text-decoration: none;
   font-size: 0.813rem;
   transition: color var(--transition-fast);
@@ -1211,13 +1287,215 @@ dialog.title-modal::backdrop {
 }
 
 .source-url-link:hover {
-  color: #bae6fd;
+  color: var(--color-accent);
   text-decoration: underline;
 }
 
 .source-link-icon {
   flex-shrink: 0;
   opacity: 0.8;
+}
+
+/* Compilation Multi-Part Adaptation Accordions */
+.modal-adaptation-section.compilation-mode {
+  gap: 12px;
+}
+
+.compilation-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.compilation-header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compilation-header-icon {
+  color: var(--badge-purple-text);
+  flex-shrink: 0;
+}
+
+.btn-toggle-all-parts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-family: var(--font-base);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-toggle-all-parts:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-bright);
+}
+
+.btn-toggle-all-parts .toggle-icon {
+  transition: transform var(--transition-fast);
+}
+
+.btn-toggle-all-parts.all-expanded .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.compilation-parts-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compilation-part-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.compilation-part-accordion:hover {
+  border-color: var(--color-border-bright);
+}
+
+.compilation-part-accordion[open] {
+  border-color: var(--badge-purple-border);
+  background: var(--color-surface-solid);
+}
+
+.compilation-part-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  transition: background var(--transition-fast);
+}
+
+.compilation-part-summary::-webkit-details-marker {
+  display: none;
+}
+
+.compilation-part-summary:hover {
+  background: var(--color-surface-hover);
+}
+
+.part-accordion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-xs);
+  background: var(--color-chip-bg);
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.compilation-part-accordion[open] .part-accordion-icon {
+  transform: rotate(90deg);
+  color: var(--badge-purple-text);
+}
+
+.part-index-badge {
+  font-family: var(--font-numeric);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--badge-purple-text);
+  background: var(--badge-purple-bg);
+  border: 1px solid var(--badge-purple-border);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+
+.part-summary-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.part-title-text {
+  font-family: var(--font-base);
+  font-size: 0.844rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.part-year-badge {
+  font-family: var(--font-numeric);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.part-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.part-tracks-badge {
+  font-family: var(--font-numeric);
+  font-size: 0.688rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--badge-sky-bg);
+  color: var(--badge-sky-text);
+  border: 1px solid var(--badge-sky-border);
+}
+
+.btn-open-part-modal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-family: var(--font-base);
+  font-size: 0.688rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-open-part-modal:hover {
+  background: var(--color-accent-soft);
+  border-color: var(--color-border-accent);
+  color: var(--color-accent-chip-text);
+  transform: translateY(-1px);
+}
+
+.compilation-part-content {
+  padding: 12px 14px 14px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-card-subtle-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Episodes Collapsible Accordion */
@@ -1266,7 +1544,7 @@ dialog.title-modal::backdrop {
   width: 20px;
   height: 20px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-chip-bg);
   color: var(--color-text-muted);
   transition: transform var(--transition-fast), color var(--transition-fast);
 }
@@ -1296,7 +1574,7 @@ dialog.title-modal::backdrop {
   overflow-y: auto;
   padding: 10px 16px 14px 16px;
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-bg-base);
 }
 
 .episodes-list {
@@ -1366,14 +1644,14 @@ dialog.title-modal::backdrop {
   width: 20px;
   height: 20px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-chip-bg);
   color: var(--color-text-muted);
   transition: transform var(--transition-fast), color var(--transition-fast);
 }
 
 .modal-files-accordion[open] .files-summary-icon {
   transform: rotate(90deg);
-  color: #38bdf8;
+  color: var(--badge-cyan-text);
 }
 
 .files-summary-title {
@@ -1386,9 +1664,9 @@ dialog.title-modal::backdrop {
   font-weight: 500;
   padding: 2px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: var(--badge-cyan-bg);
+  color: var(--badge-cyan-text);
+  border: 1px solid var(--badge-cyan-border);
 }
 
 .files-size-badge {
@@ -1397,7 +1675,7 @@ dialog.title-modal::backdrop {
   font-weight: 500;
   padding: 2px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-chip-bg);
   color: var(--color-text-secondary);
   border: color-mix(in srgb, var(--color-surface) 80%, var(--color-text-secondary) 20%);
 }
@@ -1407,7 +1685,7 @@ dialog.title-modal::backdrop {
   overflow-y: auto;
   padding: 12px 16px;
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-bg-base);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1448,14 +1726,14 @@ dialog.title-modal::backdrop {
   gap: 12px;
   padding: 6px 10px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border);
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .file-item-row:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-bright);
 }
 
 .file-icon {
@@ -1476,7 +1754,7 @@ dialog.title-modal::backdrop {
   flex-shrink: 0;
   font-family: 'DM Mono', monospace;
   font-size: 0.75rem;
-  color: #93c5fd;
+  color: var(--color-numeric-meta);
   white-space: nowrap;
 }
 
@@ -1516,5 +1794,17 @@ dialog.title-modal::backdrop {
   .credit-role-label,
   .source-role-label {
     min-width: 0;
+  }
+  .compilation-part-summary {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .part-summary-title {
+    width: 100%;
+    order: 3;
+  }
+  .part-meta-badges {
+    margin-left: 0;
+    order: 4;
   }
 }

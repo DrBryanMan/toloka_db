@@ -19,7 +19,7 @@ def create_toloka_session(username="", password="", on_log=None):
     """
     Creates HTTP session with curl_cffi (or requests fallback) and performs Toloka login if credentials exist.
     """
-    session = cffi_requests.Session()
+    session = cffi_requests.Session(impersonate="chrome120") if HAS_CURL_CFFI else cffi_requests.Session()
     u, p = get_toloka_credentials(username, password)
     if u and p:
         if on_log:
@@ -32,10 +32,7 @@ def create_toloka_session(username="", password="", on_log=None):
             "login": "Вхід",
         }
         try:
-            if hasattr(session, "post") and "impersonate" in session.post.__code__.co_varnames:
-                session.post(login_url, data=payload, headers=DEFAULT_HEADERS, impersonate="chrome120", timeout=15)
-            else:
-                session.post(login_url, data=payload, headers=DEFAULT_HEADERS, timeout=15)
+            session.post(login_url, data=payload, headers=DEFAULT_HEADERS, timeout=15)
             if on_log:
                 on_log("Авторизаційний запит виконано.", "success")
         except Exception as e:
@@ -45,9 +42,7 @@ def create_toloka_session(username="", password="", on_log=None):
 
 def fetch_url(session, url, headers=None, timeout=15):
     """
-    Fetches URL using impersonate="chrome120" if available on session.
+    Fetches URL using session headers and timeout.
     """
     hdrs = headers or DEFAULT_HEADERS
-    if hasattr(session, "get") and "impersonate" in session.get.__code__.co_varnames:
-        return session.get(url, headers=hdrs, impersonate="chrome120", timeout=timeout)
     return session.get(url, headers=hdrs, timeout=timeout)

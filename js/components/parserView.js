@@ -31,8 +31,12 @@ export function initParserView() {
   // Filter Pills
   const btnFilterNew = document.getElementById('btn-filter-new');
   const btnFilterAll = document.getElementById('btn-filter-all');
+  const btnFilterIncomplete = document.getElementById('btn-filter-incomplete');
   const badgeFilterNew = document.getElementById('badge-filter-new');
   const badgeFilterAll = document.getElementById('badge-filter-all');
+  const badgeFilterIncomplete = document.getElementById('badge-filter-incomplete');
+  const badgeIncompleteWrap = document.getElementById('parser-incomplete-badge-wrap');
+  let cachedIncompleteItems = [];
 
   // Login Modal elements
   const loginModal = document.getElementById('toloka-login-modal');
@@ -53,11 +57,21 @@ export function initParserView() {
   if (btnBrandHome) btnBrandHome.addEventListener('click', () => navigateTo(VIEWS.CATALOG));
 
   // Results Filter Toggles
-  function setFilter(filterType) {
+  async function setFilter(filterType) {
     currentFilter = filterType;
     if (btnFilterNew) btnFilterNew.classList.toggle('active', filterType === 'new');
     if (btnFilterAll) btnFilterAll.classList.toggle('active', filterType === 'all');
-    renderResults(cachedItems);
+    if (btnFilterIncomplete) btnFilterIncomplete.classList.toggle('active', filterType === 'incomplete');
+
+    if (filterType === 'incomplete') {
+      if (cachedIncompleteItems.length === 0) {
+        if (resultsGrid) resultsGrid.innerHTML = '<div class="parser-empty-msg">Завантаження неповних роздач із БД...</div>';
+        await loadIncompleteList();
+      }
+      renderIncompleteResults(cachedIncompleteItems);
+    } else {
+      renderResults(cachedItems);
+    }
   }
 
   if (btnFilterNew) {
@@ -65,6 +79,26 @@ export function initParserView() {
   }
   if (btnFilterAll) {
     btnFilterAll.addEventListener('click', () => setFilter('all'));
+  }
+  if (btnFilterIncomplete) {
+    btnFilterIncomplete.addEventListener('click', () => setFilter('incomplete'));
+  }
+
+  if (badgeIncompleteWrap) {
+    const handleIncompleteBadgeClick = () => {
+      setFilter('incomplete');
+      const resultsSection = document.getElementById('parser-results-section');
+      if (resultsSection) {
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    badgeIncompleteWrap.addEventListener('click', handleIncompleteBadgeClick);
+    badgeIncompleteWrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleIncompleteBadgeClick();
+      }
+    });
   }
 
   // Clear Console
@@ -173,9 +207,31 @@ export function initParserView() {
       const res = await fetch('/api/parser/incomplete-stats');
       if (res.ok) {
         const data = await res.json();
-        if (incompleteCountEl) incompleteCountEl.textContent = data.incomplete_count;
+        const cnt = data.incomplete_count || 0;
+        if (incompleteCountEl) incompleteCountEl.textContent = cnt;
+        if (badgeFilterIncomplete) badgeFilterIncomplete.textContent = cnt;
       }
     } catch {}
+  }
+
+  async function loadIncompleteList(force = false) {
+    if (!force && cachedIncompleteItems.length > 0) {
+      return cachedIncompleteItems;
+    }
+    try {
+      const res = await fetch('/api/parser/incomplete-list');
+      if (res.ok) {
+        const data = await res.json();
+        cachedIncompleteItems = data.items || [];
+        const cnt = data.count !== undefined ? data.count : cachedIncompleteItems.length;
+        if (incompleteCountEl) incompleteCountEl.textContent = cnt;
+        if (badgeFilterIncomplete) badgeFilterIncomplete.textContent = cnt;
+        return cachedIncompleteItems;
+      }
+    } catch (err) {
+      console.error('Помилка завантаження неповних роздач:', err);
+    }
+    return [];
   }
 
   async function startEnrichProcess(count, username, password) {
@@ -269,6 +325,10 @@ export function initParserView() {
           if (statusIndicator) statusIndicator.classList.remove('running');
           if (statusText) statusText.textContent = data.status === 'completed' ? 'Завершено' : 'Зупинено';
           appendLog(data.message || 'Парсинг завершено.', 'success');
+          loadIncompleteStats();
+          if (currentFilter === 'incomplete') {
+            loadIncompleteList(true).then(items => renderIncompleteResults(items));
+          }
         }
       } catch {
         clearInterval(pollTimer);
@@ -382,6 +442,141 @@ export function initParserView() {
     }
   }
 
+  function getMissingTagLabel(key) {
+    switch (key) {
+      case 'synopsis': return 'Без опису';
+      case 'genres': return 'Без жанрів';
+      case 'uploader': return 'Без автора';
+      case 'files': return 'Без файлів';
+      case 'movie_guess': return 'Тип movie?';
+      default: return key;
+    }
+  }
+
+  function renderIncompleteResults(items) {
+    if (!resultsGrid) return;
+    resultsGrid.innerHTML = '';
+
+    if (!items || items.length === 0) {
+      resultsGrid.innerHTML = `
+        <div class="parser-empty-msg">
+          <p>Всі роздачі в базі даних повністю заповнені! Неповних записів немає.</p>
+        </div>
+      `;
+      return;
+    }
+
+    for (const item of items) {
+      const el = document.createElement('div');
+      el.className = 'parser-result-item';
+      el.id = `parser-inc-item-${item.topic_id}`;
+
+      const missingHtml = (item.missing || []).map(m => 
+        `<span class="parser-tag-missing ${m}">${getMissingTagLabel(m)}</span>`
+      ).join('');
+
+      el.innerHTML = `
+        <div class="parser-result-id">#${item.topic_id}</div>
+        <div class="parser-result-title">${escapeHtml(item.title)}</div>
+        <div class="parser-missing-tags">${missingHtml}</div>
+        <div class="parser-result-actions">
+          <button type="button" class="parser-btn-enrich-single" data-topic-id="${item.topic_id}" title="Збагатити цю роздачу окремо">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Збагатити</span>
+          </button>
+          <button type="button" class="parser-btn-view" data-topic-id="${item.topic_id}" title="Швидкий перегляд тайтлу у модальному вікні">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Перегляд</span>
+          </button>
+          ${item.url ? `
+            <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-subtle btn-icon" title="Відкрити тему на Toloka">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          ` : ''}
+        </div>
+      `;
+
+      // Single enrich handler
+      const btnEnrich = el.querySelector('.parser-btn-enrich-single');
+      if (btnEnrich) {
+        btnEnrich.addEventListener('click', (e) => {
+          e.stopPropagation();
+          enrichSingleItem(item, btnEnrich, el);
+        });
+      }
+
+      // Quick View Click Handler
+      const btnView = el.querySelector('.parser-btn-view');
+      if (btnView) {
+        btnView.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openQuickModal(item);
+        });
+      }
+
+      resultsGrid.appendChild(el);
+    }
+  }
+
+  async function enrichSingleItem(item, btnEl, rowEl) {
+    const savedUser = sessionStorage.getItem('toloka_username') || '';
+    const savedPass = sessionStorage.getItem('toloka_password') || '';
+    const spanText = btnEl.querySelector('span');
+
+    btnEl.classList.add('loading');
+    btnEl.disabled = true;
+    if (spanText) spanText.textContent = 'Збагачення...';
+
+    appendLog(`[Точкове збагачення] Обробка #${item.topic_id}: ${item.title.substring(0, 45)}...`, 'info');
+
+    try {
+      const res = await fetch('/api/parser/enrich', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          single_id: item.topic_id,
+          username: savedUser,
+          password: savedPass
+        })
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        appendLog(`✓ Успішно збагачено #${item.topic_id}`, 'success');
+        if (spanText) spanText.textContent = 'Збагачено';
+        btnEl.classList.remove('loading');
+        btnEl.disabled = true;
+
+        const tagsContainer = rowEl.querySelector('.parser-missing-tags');
+        if (tagsContainer) {
+          tagsContainer.innerHTML = '<span class="parser-tag-missing enriched">✓ Дані оновлено</span>';
+        }
+
+        // Update counts and cached list
+        cachedIncompleteItems = cachedIncompleteItems.filter(i => i.topic_id !== item.topic_id);
+        const newCount = cachedIncompleteItems.length;
+        if (incompleteCountEl) incompleteCountEl.textContent = newCount;
+        if (badgeFilterIncomplete) badgeFilterIncomplete.textContent = newCount;
+      } else {
+        const errMsg = resData.error || 'Помилка';
+        appendLog(`Помилка збагачення #${item.topic_id}: ${errMsg}`, 'error');
+        btnEl.classList.remove('loading');
+        btnEl.disabled = false;
+        if (spanText) spanText.textContent = 'Повторити';
+      }
+    } catch (e) {
+      appendLog(`Помилка мережі при збагаченні #${item.topic_id}: ${e.message}`, 'error');
+      btnEl.classList.remove('loading');
+      btnEl.disabled = false;
+      if (spanText) spanText.textContent = 'Повторити';
+    }
+  }
+
   function openQuickModal(item) {
     const tid = Number(item.topic_id);
     const existingTitle = (window.TOLOKA_CATALOG?.titles || []).find(t => t.id === tid);
@@ -419,4 +614,6 @@ export function initParserView() {
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
+
+  loadIncompleteStats();
 }

@@ -15,6 +15,7 @@ import { initExtSyncView } from './components/extSyncView.js';
 import { initPosterDownloaderView } from './components/posterDownloaderView.js';
 import { initIncompleteView } from './components/incompleteView.js';
 import { initFallbackModal, openFallbackModal } from './components/fallbackModal.js';
+import { initTheme } from './components/theme.js';
 import { 
   initRouter, 
   getActiveView, 
@@ -29,6 +30,7 @@ import {
 const customSelects = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initTheme();
   let catalogData = window.TOLOKA_CATALOG;
   let isFallbackLoaded = false;
 

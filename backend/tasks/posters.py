@@ -3,7 +3,6 @@
 import threading
 from backend.state import TaskState
 
-poster_downloader_lock = threading.Lock()
 poster_stop_event = threading.Event()
 
 poster_downloader_state = TaskState({

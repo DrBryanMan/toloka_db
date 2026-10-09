@@ -61,7 +61,7 @@
 .parser-pages-select {
   height: 38px;
   padding: 0 14px;
-  background: rgba(12, 17, 26, 0.85);
+  background: var(--color-control-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
@@ -106,6 +106,22 @@
   transform: translateY(-1px);
 }
 
+.btn-enrich-compilations {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.btn-enrich-compilations:hover {
+  transform: translateY(-1px);
+}
+
 .parser-incomplete-badge-wrap {
   display: inline-flex;
   align-items: center;
@@ -113,15 +129,43 @@
   margin-left: auto;
   font-size: 0.813rem;
   color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.parser-incomplete-badge-wrap:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.parser-incomplete-badge-wrap:hover .parser-incomplete-arrow {
+  transform: translateY(2px);
+  color: var(--color-accent);
+}
+
+.parser-incomplete-arrow {
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast), color var(--transition-fast);
 }
 
 .parser-incomplete-badge-wrap strong {
   font-family: 'DM Mono', monospace;
-  color: var(--color-accent);
-  background: rgba(34, 197, 94, 0.12);
+  color: var(--badge-green-text);
+  background: var(--badge-green-bg);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  border: 1px solid var(--badge-green-border);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.parser-incomplete-badge-wrap:hover strong {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
 }
 
 /* Status Bar */
@@ -252,7 +296,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(12, 17, 26, 0.7);
+  background: var(--color-surface);
   padding: 3px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
@@ -276,13 +320,13 @@
 
 .parser-filter-btn:hover {
   color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-hover);
 }
 
 .parser-filter-btn.active {
   background: var(--color-accent);
-  color: #0b1712;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.35);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--color-accent-glow);
 }
 
 .parser-filter-badge {
@@ -290,14 +334,16 @@
   font-size: 0.688rem;
   padding: 1px 6px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
   color: inherit;
   font-weight: 700;
 }
 
 .parser-filter-btn.active .parser-filter-badge {
-  background: rgba(0, 0, 0, 0.2);
-  color: #0b1712;
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
 }
 
 .parser-results-grid {
@@ -339,9 +385,9 @@
 .parser-badge-new {
   padding: 3px 8px;
   border-radius: var(--radius-xs);
-  background: rgba(34, 197, 94, 0.2);
-  border: 1px solid var(--color-accent);
-  color: #86efac;
+  background: var(--badge-green-bg);
+  border: 1px solid var(--badge-green-border);
+  color: var(--badge-green-text);
   font-size: 0.688rem;
   font-weight: 700;
 }
@@ -349,9 +395,9 @@
 .parser-badge-exist {
   padding: 3px 8px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  color: var(--color-text-secondary);
   font-size: 0.688rem;
 }
 
@@ -369,23 +415,136 @@
   height: 28px;
   padding: 0 10px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: var(--radius-xs);
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  color: #86efac;
+  background: var(--badge-green-bg);
+  border: 1px solid var(--badge-green-border);
+  color: var(--badge-green-text);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .parser-btn-view:hover {
-  background: rgba(34, 197, 94, 0.25);
+  background: var(--color-accent);
   border-color: var(--color-accent);
   color: #ffffff;
 }
 
 .parser-btn-view svg {
   color: inherit;
+}
+
+/* Single Item Enrich Button */
+.parser-btn-enrich-single {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  background: var(--badge-blue-bg);
+  border: 1px solid var(--badge-blue-border);
+  color: var(--badge-blue-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.parser-btn-enrich-single:hover:not(:disabled) {
+  background: var(--badge-blue-text);
+  border-color: var(--badge-blue-text);
+  color: #ffffff;
+}
+
+.parser-btn-enrich-single:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.parser-btn-enrich-single.loading svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Missing Field Badges */
+.parser-missing-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.parser-tag-missing {
+  padding: 2px 7px;
+  font-size: 0.688rem;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.parser-tag-missing.synopsis {
+  background: var(--badge-amber-bg);
+  border: 1px solid var(--badge-amber-border);
+  color: var(--badge-amber-text);
+}
+
+.parser-tag-missing.genres {
+  background: var(--badge-orange-bg);
+  border: 1px solid var(--badge-orange-border);
+  color: var(--badge-orange-text);
+}
+
+.parser-tag-missing.uploader {
+  background: var(--badge-purple-bg);
+  border: 1px solid var(--badge-purple-border);
+  color: var(--badge-purple-text);
+}
+
+.parser-tag-missing.files {
+  background: var(--badge-cyan-bg);
+  border: 1px solid var(--badge-cyan-border);
+  color: var(--badge-cyan-text);
+}
+
+.parser-tag-missing.movie_guess {
+  background: var(--badge-rose-bg);
+  border: 1px solid var(--badge-rose-border);
+  color: var(--badge-rose-text);
+}
+
+.parser-tag-missing.enriched {
+  background: var(--badge-green-bg);
+  border: 1px solid var(--badge-green-border);
+  color: var(--badge-green-text);
+}
+
+.parser-badge-compilation {
+  font-size: 0.688rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.parser-badge-compilation.enriched {
+  background: var(--badge-purple-bg);
+  border: 1px solid var(--badge-purple-border);
+  color: var(--badge-purple-text);
+}
+
+.parser-badge-compilation.candidate {
+  background: var(--badge-amber-bg);
+  border: 1px solid var(--badge-amber-border);
+  color: var(--badge-amber-text);
 }
 
 .parser-empty-msg {
@@ -416,10 +575,10 @@ dialog.toloka-login-modal {
   padding: 0;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-lg);
-  background: rgba(16, 22, 34, 0.98);
+  background: var(--color-modal-bg);
   color: var(--color-text-primary);
   backdrop-filter: var(--blur-base);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(34, 197, 94, 0.2);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(34, 197, 94, 0.12);
   z-index: 1200;
 }
 
@@ -468,7 +627,7 @@ dialog.toloka-login-modal {
 
 .login-field input {
   padding: 9px 12px;
-  background: rgba(12, 17, 26, 0.85);
+  background: var(--color-control-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
@@ -479,6 +638,7 @@ dialog.toloka-login-modal {
 
 .login-field input:focus {
   border-color: var(--color-accent);
+  background: var(--color-surface-solid);
   box-shadow: 0 0 0 2px var(--color-accent-soft);
 }
 
@@ -554,45 +714,45 @@ dialog.toloka-login-modal {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-chip-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
 }
 
 .voc-badge-type.voc-type-movie {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #f87171;
+  background: var(--badge-rose-bg);
+  border-color: var(--badge-rose-border);
+  color: var(--badge-rose-text);
 }
 
 .voc-badge-type.voc-type-movie-guess {
-  background: rgba(234, 179, 8, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
+  background: var(--badge-amber-bg);
+  border-color: var(--badge-amber-border);
+  color: var(--badge-amber-text);
 }
 
 .voc-badge-type.voc-type-tv {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
+  background: var(--badge-blue-bg);
+  border-color: var(--badge-blue-border);
+  color: var(--badge-blue-text);
 }
 
 .voc-badge-type.voc-type-ova {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
+  background: var(--badge-orange-bg);
+  border-color: var(--badge-orange-border);
+  color: var(--badge-orange-text);
 }
 
 .voc-badge-type.voc-type-ona {
-  background: rgba(20, 184, 166, 0.15);
-  border-color: rgba(20, 184, 166, 0.35);
-  color: #2dd4bf;
+  background: var(--badge-teal-bg);
+  border-color: var(--badge-teal-border);
+  color: var(--badge-teal-text);
 }
 
 .voc-badge-type.voc-type-special {
-  background: rgba(168, 85, 247, 0.15);
-  border-color: rgba(168, 85, 247, 0.35);
-  color: #c084fc;
+  background: var(--badge-purple-bg);
+  border-color: var(--badge-purple-border);
+  color: var(--badge-purple-text);
 }
 
 .voc-badge-hikka {
@@ -694,13 +854,13 @@ dialog.toloka-login-modal {
   width: 24px;
   height: 24px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-chip-bg);
   border: 1px solid var(--color-border);
   transition: all var(--transition-fast);
 }
 
 .voc-stream-icon-link:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--color-surface-hover);
   border-color: var(--color-border-bright);
 }
 

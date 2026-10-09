@@ -10,18 +10,18 @@ dialog.edit-modal {
   padding: 0;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-xl);
-  background: rgba(16, 22, 34, 0.98);
+  background: var(--color-modal-bg);
   color: var(--color-text-primary);
   backdrop-filter: var(--blur-base);
   -webkit-backdrop-filter: var(--blur-base);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(34, 197, 94, 0.15);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(34, 197, 94, 0.12);
   overflow: hidden;
   outline: none;
   z-index: 1100;
 }
 
 dialog.edit-modal::backdrop {
-  background: rgba(4, 7, 13, 0.75);
+  background: var(--color-backdrop);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -39,7 +39,7 @@ dialog.edit-modal::backdrop {
   justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid var(--color-border);
-  background: rgba(12, 17, 26, 0.6);
+  background: var(--color-modal-sidebar-bg);
 }
 
 .edit-modal-title {
@@ -52,7 +52,7 @@ dialog.edit-modal::backdrop {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   display: flex;
@@ -63,8 +63,8 @@ dialog.edit-modal::backdrop {
 }
 
 .edit-modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .edit-title-form {
@@ -104,7 +104,7 @@ dialog.edit-modal::backdrop {
 .edit-field textarea {
   width: 100%;
   padding: 9px 12px;
-  background: rgba(12, 17, 26, 0.85);
+  background: var(--color-control-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
@@ -119,7 +119,7 @@ dialog.edit-modal::backdrop {
 .edit-field textarea:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 2px var(--color-accent-soft);
-  background: rgba(18, 25, 38, 0.95);
+  background: var(--color-surface-solid);
 }
 
 .edit-field textarea {
@@ -134,7 +134,7 @@ dialog.edit-modal::backdrop {
   gap: 12px;
   padding: 16px 24px;
   border-top: 1px solid var(--color-border);
-  background: rgba(12, 17, 26, 0.6);
+  background: var(--color-modal-sidebar-bg);
 }
 
 /* Card Edit Button */
@@ -145,7 +145,7 @@ dialog.edit-modal::backdrop {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-xs);
-  background: rgba(12, 16, 26, 0.9);
+  background: var(--color-control-bg);
   backdrop-filter: var(--blur-subtle);
   border: 1px solid var(--color-border-bright);
   color: var(--color-text-secondary);

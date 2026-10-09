@@ -179,6 +179,18 @@ def run_background_parse(pages=1, username="", password=""):
                                 final_sz = data.get("torrent_size") or size_val
                                 final_reg = data.get("registered_at") or reg_date_val
 
+                                is_comp_val = 0
+                                try:
+                                    from compilation_parser import is_compilation_release, process_compilation_topic, save_compilation_items
+                                    soup_topic = BeautifulSoup(t_resp.text, "html.parser")
+                                    if is_compilation_release(data["title"] or raw_title, soup_topic):
+                                        comp_items, data = process_compilation_topic(tid, item_url, t_resp.text, data)
+                                        save_compilation_items(tid, comp_items, cur)
+                                        is_comp_val = 1
+                                        add_log(f"  └ Збірник: виділено {len(comp_items)} окремих тайтлів для #{tid}", "info")
+                                except Exception as c_err:
+                                    pass
+
                                 cur.execute("""
                                     INSERT OR REPLACE INTO topics (
                                         topic_id, url, title, content_type, uploader, uploader_id,
@@ -186,8 +198,8 @@ def run_background_parse(pages=1, username="", password=""):
                                         episode_list, episode_count, episode_count_is_guess, quality,
                                         poster_url, download_url, seeders, torrent_size, registered_at,
                                         torrent_edited_at, files, raw_fields, original_credits,
-                                        adaptation_team, content_hash, source_file, part, has_sub, updated_at
-                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                                        adaptation_team, content_hash, source_file, part, has_sub, is_compilation, updated_at
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                                 """, (
                                     tid, item_url, data["title"], data["content_type"], data["uploader"] or uploader_val, data["uploader_id"] or uploader_id_val,
                                     data["genres"], data["country"], data["studio"], data["director"],
@@ -196,7 +208,7 @@ def run_background_parse(pages=1, username="", password=""):
                                     data["poster_url"], data["download_url"] or dl_url_val, seeders_val, final_sz, final_reg,
                                     data.get("torrent_edited_at", ""), data["files"],
                                     data["raw_fields"], data["original_credits"], data["adaptation_team"],
-                                    data["content_hash"], data["source_file"], part_val, has_sub_val
+                                    data["content_hash"], data["source_file"], part_val, has_sub_val, is_comp_val
                                 ))
                                 known_ids.add(tid)
                                 add_log(f"✓ Повні дані збережено для #{tid} ({data['uploader']}, {data['episode_count']} сер.)", "success")
@@ -283,6 +295,21 @@ def run_background_enrich(count=20, username="", password="", incomplete_only=Tr
                         part_val = data.get("part")
                         has_sub_val = data.get("has_sub", 0)
 
+                        # Check and extract compilation / collection releases
+                        is_comp_val = 0
+                        try:
+                            from compilation_parser import is_compilation_release, process_compilation_topic, save_compilation_items
+                            soup_topic = BeautifulSoup(resp.text, "html.parser")
+                            if is_compilation_release(data["title"] or raw_title, soup_topic):
+                                comp_items, data = process_compilation_topic(tid, item_url, resp.text, data)
+                                save_compilation_items(tid, comp_items, cur)
+                                is_comp_val = 1
+                                add_log(f"  └ Збірник: виділено {len(comp_items)} окремих тайтлів для #{tid}", "info")
+                            else:
+                                cur.execute("DELETE FROM compilation_items WHERE parent_topic_id = ?", (tid,))
+                        except Exception as c_err:
+                            add_log(f"Помилка аналізу збірника #{tid}: {c_err}", "warn")
+
                         cur.execute("""
                             UPDATE topics SET 
                                 title = COALESCE(NULLIF(?, ''), title),
@@ -312,6 +339,7 @@ def run_background_enrich(count=20, username="", password="", incomplete_only=Tr
                                 source_file = ?,
                                 part = ?,
                                 has_sub = ?,
+                                is_compilation = ?,
                                 updated_at = datetime('now')
                             WHERE topic_id = ?
                         """, (
@@ -322,12 +350,25 @@ def run_background_enrich(count=20, username="", password="", incomplete_only=Tr
                             data["poster_url"], data["download_url"],
                             data.get("torrent_size", ""), data.get("registered_at", ""), data.get("torrent_edited_at", ""),
                             data["files"], data["raw_fields"], data["original_credits"], data["adaptation_team"],
-                            data["content_hash"], data["source_file"], part_val, has_sub_val, tid
+                            data["content_hash"], data["source_file"], part_val, has_sub_val, is_comp_val, tid
                         ))
                         con.commit()
                         enriched_count += 1
 
+                        # Hikka API enrichment fallback for missing metadata
+                        if (not data.get("studio") or not data.get("director") or
+                            data.get("genres") in (None, "", "[]") or not data.get("synopsis") or not data.get("country")):
+                            try:
+                                from backend.services.hikka import enrich_topic_from_hikka
+                                h_res = enrich_topic_from_hikka(tid, delay=0.2)
+                                if h_res.get("updated"):
+                                    fields_str = ", ".join(h_res.get("fields_enriched", []))
+                                    add_log(f"  └ Доповнено з Hikka API: {fields_str}", "info")
+                            except Exception:
+                                pass
+
                         if data.get("poster_url"):
+
                             try:
                                 dl_ok, _, _ = download_posters.download_single_poster((tid, data["poster_url"], data["title"]))
                                 if dl_ok:
@@ -407,6 +448,20 @@ def enrich_single_topic_sync(tid, username="", password=""):
             part_val = data.get("part")
             has_sub_val = data.get("has_sub", 0)
 
+            # Check and extract compilation / collection releases
+            is_comp_val = 0
+            try:
+                from compilation_parser import is_compilation_release, process_compilation_topic, save_compilation_items
+                soup_topic = BeautifulSoup(resp.text, "html.parser")
+                if is_compilation_release(data["title"] or raw_title, soup_topic):
+                    comp_items, data = process_compilation_topic(tid, item_url, resp.text, data)
+                    save_compilation_items(tid, comp_items, cur)
+                    is_comp_val = 1
+                else:
+                    cur.execute("DELETE FROM compilation_items WHERE parent_topic_id = ?", (tid,))
+            except Exception as c_err:
+                pass
+
             cur.execute("""
                 UPDATE topics SET 
                     title = COALESCE(NULLIF(?, ''), title),
@@ -436,6 +491,7 @@ def enrich_single_topic_sync(tid, username="", password=""):
                     source_file = ?,
                     part = ?,
                     has_sub = ?,
+                    is_compilation = ?,
                     updated_at = datetime('now')
                 WHERE topic_id = ?
             """, (
@@ -446,9 +502,18 @@ def enrich_single_topic_sync(tid, username="", password=""):
                 data["poster_url"], data["download_url"],
                 data.get("torrent_size", ""), data.get("registered_at", ""), data.get("torrent_edited_at", ""),
                 data["files"], data["raw_fields"], data["original_credits"], data["adaptation_team"],
-                data["content_hash"], data["source_file"], part_val, has_sub_val, tid
+                data["content_hash"], data["source_file"], part_val, has_sub_val, is_comp_val, tid
             ))
             con.commit()
+
+            # Hikka API enrichment fallback for missing metadata
+            if (not data.get("studio") or not data.get("director") or
+                data.get("genres") in (None, "", "[]") or not data.get("synopsis") or not data.get("country")):
+                try:
+                    from backend.services.hikka import enrich_topic_from_hikka
+                    enrich_topic_from_hikka(tid, delay=0.2)
+                except Exception:
+                    pass
 
             if data.get("poster_url"):
                 try:
@@ -456,15 +521,196 @@ def enrich_single_topic_sync(tid, username="", password=""):
                 except Exception:
                     pass
 
-            cur.execute(f"SELECT {CATALOG_COLS} FROM topics WHERE topic_id = ?", (tid,))
-            row_updated = cur.fetchone()
-
+        # Trigger catalog rebuild in background
         threading.Thread(target=lambda: subprocess.run([sys.executable, str(FOR_AGENTS_DIR / "build_catalog_data.py")], cwd=str(BASE_DIR), check=False), daemon=True).start()
 
-        if row_updated:
-            item_formatted = format_catalog_item(row_updated, base_dir=str(BASE_DIR))
-            return {"success": True, "title": item_formatted}
-        return {"success": True}
+        from backend.services.titles import get_title_by_id
+        item_formatted = get_title_by_id(tid)
+        return {"success": True, "title": item_formatted}
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def run_background_compilations_enrich(username="", password=""):
+    """
+    Background worker that scans the database for all compilation candidate releases,
+    fetches their topics, verifies compilation structure, extracts individual titles,
+    and updates the database & catalog.
+    """
+    scraper_state.reset_logs()
+    scraper_state.update(
+        is_running=True,
+        status="running",
+        message="Пошук та збагачення роздач-збірників...",
+        total_scraped=0,
+        new_items=0,
+        recent_items=[]
+    )
+
+    add_log("Запуск пошуку та збагачення роздач-збірників у базі даних...", "info")
+
+    try:
+        from compilation_parser import is_compilation_release, process_compilation_topic, save_compilation_items
+        from toloka_parser_engine import parse_topic_full_data
+        import download_posters
+
+        session = create_toloka_session(username, password, on_log=add_log)
+
+        with get_db() as con:
+            cur = con.cursor()
+            cur.execute("""
+                SELECT topic_id, url, title, is_compilation FROM topics 
+                WHERE 
+                    is_compilation = 1
+                    OR title LIKE '%колекція%'
+                    OR title LIKE '%колекция%'
+                    OR title LIKE '%збірка%'
+                    OR title LIKE '%збірник%'
+                    OR title LIKE '%collection%'
+                    OR title LIKE '%antologia%'
+                    OR title LIKE '%фільмографія%'
+                    OR title LIKE '%трилогія%'
+                    OR title LIKE '%дилогія%'
+                    OR title LIKE '%квадрологія%'
+                    OR title LIKE '%(фільми%'
+                    OR title LIKE '%фільми 1-%'
+                ORDER BY topic_id DESC
+            """)
+            candidate_rows = cur.fetchall()
+
+        total_candidates = len(candidate_rows)
+        add_log(f"Знайдено {total_candidates} потенційних роздач-збірників для перевірки.", "info")
+
+        processed_compilations = 0
+        total_items_created = 0
+        scraped_items = []
+
+        for idx, (tid, item_url, raw_title, cur_is_comp) in enumerate(candidate_rows, start=1):
+            if not scraper_state["is_running"]:
+                add_log("Збагачення збірників перервано користувачем.", "warn")
+                break
+
+            target_url = item_url or f"https://toloka.to/t{tid}"
+            add_log(f"[{idx}/{total_candidates}] Перевірка #{tid}: {raw_title[:60]}...", "info")
+
+            try:
+                resp = fetch_url(session, target_url)
+                if resp.status_code != 200:
+                    add_log(f"  Помилка завантаження #{tid}: HTTP {resp.status_code}", "warn")
+                    time.sleep(1.0)
+                    continue
+
+                soup = BeautifulSoup(resp.text, "html.parser")
+                full_data = parse_topic_full_data(tid, target_url, resp.text, fallback_title=raw_title)
+
+                with get_db() as con:
+                    cur = con.cursor()
+                    if is_compilation_release(full_data.get("title") or raw_title, soup):
+                        comp_items, updated_parent = process_compilation_topic(tid, target_url, resp.text, full_data)
+                        save_compilation_items(tid, comp_items, cur)
+                        
+                        part_val = updated_parent.get("part")
+                        has_sub_val = updated_parent.get("has_sub", 0)
+
+                        cur.execute("""
+                            UPDATE topics SET 
+                                title = COALESCE(NULLIF(?, ''), title),
+                                content_type = COALESCE(NULLIF(?, ''), content_type),
+                                uploader = ?,
+                                uploader_id = ?,
+                                genres = ?,
+                                country = ?,
+                                studio = ?,
+                                director = ?,
+                                synopsis = ?,
+                                duration_raw = ?,
+                                episode_list = ?,
+                                episode_count = COALESCE(?, episode_count),
+                                episode_count_is_guess = ?,
+                                quality = COALESCE(NULLIF(?, ''), quality),
+                                poster_url = COALESCE(NULLIF(?, ''), poster_url),
+                                download_url = COALESCE(NULLIF(?, ''), download_url),
+                                torrent_size = COALESCE(NULLIF(?, ''), torrent_size),
+                                registered_at = COALESCE(NULLIF(?, ''), registered_at),
+                                torrent_edited_at = COALESCE(NULLIF(?, ''), torrent_edited_at),
+                                files = ?,
+                                raw_fields = ?,
+                                original_credits = ?,
+                                adaptation_team = ?,
+                                content_hash = ?,
+                                source_file = ?,
+                                part = ?,
+                                has_sub = ?,
+                                is_compilation = 1,
+                                voc_teams = ?,
+                                updated_at = datetime('now')
+                            WHERE topic_id = ?
+                        """, (
+                            updated_parent["title"], updated_parent["content_type"], updated_parent["uploader"], updated_parent["uploader_id"],
+                            updated_parent["genres"], updated_parent["country"], updated_parent["studio"], updated_parent["director"],
+                            updated_parent["synopsis"], updated_parent["duration_raw"], updated_parent["episode_list"],
+                            updated_parent["episode_count"], updated_parent["episode_count_is_guess"], updated_parent["quality"],
+                            updated_parent["poster_url"], updated_parent["download_url"],
+                            updated_parent.get("torrent_size", ""), updated_parent.get("registered_at", ""), updated_parent.get("torrent_edited_at", ""),
+                            updated_parent["files"], updated_parent["raw_fields"], updated_parent["original_credits"], updated_parent["adaptation_team"],
+                            updated_parent["content_hash"], updated_parent["source_file"], part_val, has_sub_val,
+                            updated_parent.get("voc_teams"), tid
+                        ))
+                        con.commit()
+
+                        processed_compilations += 1
+                        total_items_created += len(comp_items)
+                        add_log(f"  ✓ Збірник #{tid}: виділено {len(comp_items)} окремих тайтлів!", "success")
+
+                        item_info = {
+                            "topic_id": tid,
+                            "title": updated_parent.get("title") or raw_title,
+                            "url": target_url,
+                            "is_new": False,
+                            "is_compilation": True,
+                            "parts_count": len(comp_items),
+                            "poster_url": updated_parent.get("poster_url")
+                        }
+                        scraped_items.append(item_info)
+                        with scraper_state.lock:
+                            scraper_state["total_scraped"] = processed_compilations
+                            scraper_state["recent_items"] = list(scraped_items)
+
+                        for c_it in comp_items:
+                            p_url = c_it.get("poster_url")
+                            if p_url:
+                                try:
+                                    download_posters.download_single_poster((c_it["item_id"], p_url, c_it["title"]))
+                                except Exception:
+                                    pass
+                    else:
+                        cur.execute("UPDATE topics SET is_compilation = 0 WHERE topic_id = ?", (tid,))
+                        cur.execute("DELETE FROM compilation_items WHERE parent_topic_id = ?", (tid,))
+                        con.commit()
+                        add_log(f"  #{tid} не є збірником (пропущено)", "info")
+
+                time.sleep(1.2)
+
+            except Exception as item_err:
+                add_log(f"Помилка обробки #{tid}: {item_err}", "warn")
+                time.sleep(1.0)
+
+        add_log("Перебудова data/catalog.js...", "info")
+        subprocess.run([sys.executable, str(FOR_AGENTS_DIR / "build_catalog_data.py")], cwd=str(BASE_DIR), check=False)
+        add_log(f"Каталог успішно оновлено! Опрацьовано {processed_compilations} збірників (створено {total_items_created} дочірніх карток).", "success")
+
+        scraper_state.update(
+            is_running=False,
+            status="completed",
+            message=f"Завершено! Збагачено {processed_compilations} збірників ({total_items_created} тайтлів)."
+        )
+
+    except Exception as e:
+        add_log(f"Критична помилка збагачення збірників: {e}", "error")
+        scraper_state.update(
+            is_running=False,
+            status="error",
+            message=f"Помилка: {e}"
+        )
+

@@ -89,6 +89,8 @@ export function renderTableView(container, appState, onRowClick) {
                   ${item.title_orig ? `<div class="table-title-orig" title="${escapeHtml(item.title_orig)}">${escapeHtml(item.title_orig)}</div>` : ''}
                   <div class="table-title-subinfo">
                     <span class="table-topic-id card-topic-id" title="Клікніть, щоб скопіювати ID">#${item.id}</span>
+                    ${item.is_compilation ? `<span class="table-part-badge compilation">Збірник ${item.parts_count ? `(${item.parts_count})` : ''}</span>` : ''}
+                    ${item.is_compilation_item ? `<span class="table-part-badge compilation-item">Зі збірки #${item.parent_id}</span>` : ''}
                     ${item.part ? `<span class="table-part-badge">${escapeHtml(item.part)}</span>` : ''}
                   </div>
                 </div>

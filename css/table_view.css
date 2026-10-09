@@ -31,7 +31,7 @@
 
 .btn-view-mode:hover {
   color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-hover);
 }
 
 .btn-view-mode.active {
@@ -71,7 +71,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
-  background: rgba(10, 14, 24, 0.65);
+  background: var(--color-table-th-bg);
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
   user-select: none;
@@ -79,7 +79,7 @@
 
 .catalog-data-table td {
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
   transition: background var(--transition-fast);
 }
@@ -174,16 +174,17 @@
   font-family: 'DM Mono', monospace;
   font-size: 0.688rem;
   color: var(--color-text-disabled);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-chip-bg);
   padding: 1px 6px;
   border-radius: var(--radius-xs);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .table-topic-id:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-bright);
   color: var(--color-text-primary);
 }
 
@@ -202,6 +203,20 @@
   padding: 1px 6px;
   border-radius: var(--radius-xs);
   border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+.table-part-badge.compilation {
+  font-family: var(--font-base);
+  color: var(--badge-purple-text);
+  background: var(--badge-purple-bg);
+  border-color: var(--badge-purple-border);
+}
+
+.table-part-badge.compilation-item {
+  font-family: var(--font-base);
+  color: var(--badge-blue-text);
+  background: var(--badge-blue-bg);
+  border-color: var(--badge-blue-border);
 }
 
 /* Year Column */
@@ -236,15 +251,15 @@
   font-weight: 600;
   padding: 2px 7px;
   border-radius: var(--radius-xs);
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: var(--badge-cyan-bg);
+  color: var(--badge-cyan-text);
+  border: 1px solid var(--badge-cyan-border);
 }
 
 .table-type-badge.type-guess {
-  background: rgba(245, 158, 11, 0.12);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.25);
+  background: var(--badge-amber-bg);
+  color: var(--badge-amber-text);
+  border-color: var(--badge-amber-border);
 }
 
 .table-episodes-val {
@@ -265,10 +280,10 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-chip-bg);
   padding: 2px 7px;
   border-radius: var(--radius-xs);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-chip-border);
 }
 
 .table-empty-dash {
@@ -314,9 +329,9 @@
 }
 
 .table-voc-pill.more {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-chip-bg);
   color: var(--color-text-muted);
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-chip-border);
 }
 
 /* Torrent Column */
@@ -372,8 +387,8 @@
   width: 28px;
   height: 28px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -381,9 +396,9 @@
 }
 
 .table-action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-surface-hover);
   color: var(--color-text-primary);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-border-bright);
 }
 
 .table-action-btn.btn-copy-link.copied {

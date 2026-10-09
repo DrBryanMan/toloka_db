@@ -440,6 +440,19 @@
   border-color: rgba(34, 197, 94, 0.3);
 }
 
+.tools-menu-item-danger svg {
+  color: #ef4444;
+}
+
+.tools-menu-item-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.tools-menu-item-danger:hover .tools-menu-title {
+  color: #ef4444;
+}
+
 .tools-menu-text {
   display: flex;
   flex-direction: column;

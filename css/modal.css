@@ -32,29 +32,61 @@ dialog.title-modal::backdrop {
   overflow: hidden;
 }
 
-/* Modal Close Button */
-.modal-close-btn {
+/* Modal Header Action Controls */
+.modal-top-actions {
   position: absolute;
   top: 16px;
   right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.modal-action-btn,
+.modal-close-btn {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+  backdrop-filter: var(--blur-subtle);
+  -webkit-backdrop-filter: var(--blur-subtle);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
   transition: all var(--transition-fast);
 }
 
+.modal-close-btn:not(.modal-top-actions *) {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.modal-action-btn:hover,
 .modal-close-btn:hover {
   background: var(--color-surface-hover);
   border-color: var(--color-border-bright);
   color: var(--color-text-primary);
+}
+
+.modal-action-btn:active,
+.modal-close-btn:active {
+  transform: scale(0.95);
+}
+
+.modal-edit-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-border-accent);
+}
+
+.modal-enrich-hikka-btn:hover {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
 /* Left Column: Media & Actions */

@@ -352,12 +352,14 @@ def enrich_topic_from_hikka(topic_id: int, force: bool = False, delay: float = 0
                 "studio": studio_col,
                 "director": director_col,
                 "country": country_col,
-                "synopsis_len": len(syn_col or "")
+                "synopsis": syn_col,
+                "synopsis_len": len(syn_col or ""),
+                "external_ids": ext_ids
             }
         }
 
 
-def batch_enrich_hikka(limit: int = 50, filter_type: str = "all", on_progress=None) -> dict:
+def batch_enrich_hikka(limit: int = 50, filter_type: str = "all", on_progress=None, on_item_done=None) -> dict:
     """
     Batch enriches incomplete titles using Hikka API.
     filter_type can be: 'all', 'studio', 'director', 'genres', 'synopsis', 'country'
@@ -401,6 +403,12 @@ def batch_enrich_hikka(limit: int = 50, filter_type: str = "all", on_progress=No
     if on_progress:
         on_progress(f"Знайдено {total_candidates} тайтлів з незаповненими даними.", "info")
 
+    if on_item_done:
+        try:
+            on_item_done(0, total_candidates, 0, None)
+        except Exception:
+            pass
+
     enriched_count = 0
     enriched_items = []
 
@@ -416,20 +424,40 @@ def batch_enrich_hikka(limit: int = 50, filter_type: str = "all", on_progress=No
                 fields_str = ", ".join(res.get("fields_enriched", []))
                 if on_progress:
                     on_progress(f"  ✓ #{tid} успішно оновлено поля: {fields_str}", "success")
-                enriched_items.append({
+                item_entry = {
                     "topic_id": tid,
                     "title": title,
-                    "fields": res.get("fields_enriched", [])
-                })
+                    "fields": res.get("fields_enriched", []),
+                    "data": res.get("data", {})
+                }
+                enriched_items.append(item_entry)
             else:
                 msg = res.get("message") or res.get("error") or "дані не знайдено"
                 if on_progress:
                     on_progress(f"  – #{tid}: {msg}", "info")
+                item_entry = {
+                    "topic_id": tid,
+                    "title": title,
+                    "fields": [],
+                    "message": msg
+                }
         except Exception as e:
             if on_progress:
                 on_progress(f"  ⚠ Помилка при обробці #{tid}: {e}", "warn")
+            item_entry = {
+                "topic_id": tid,
+                "title": title,
+                "error": str(e)
+            }
+
+        if on_item_done:
+            try:
+                on_item_done(idx + 1, total_candidates, enriched_count, item_entry)
+            except Exception:
+                pass
 
         time.sleep(0.1)
+
 
     if on_progress:
         on_progress(f"Збагачення завершено! Оновлено {enriched_count} із {total_candidates} тайтлів.", "success")

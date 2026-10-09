@@ -1,16 +1,47 @@
 /**
  * Modal Dialog Component for Title Details
  */
-import { escapeHtml, getSvgPlaceholder } from '../utils.js';
+import { escapeHtml, getSvgPlaceholder, showToast } from '../utils.js';
+import { openEditModal } from './editModal.js';
 
 let modalElement = null;
+let currentModalItem = null;
 
 export function initModal() {
   modalElement = document.getElementById('title-modal');
   if (!modalElement) return;
 
-  // Close when clicking on backdrop
+  // Delegated click handler for header action buttons & backdrop
   modalElement.addEventListener('click', (event) => {
+    const enrichBtn = event.target.closest('.modal-enrich-hikka-btn');
+    if (enrichBtn) {
+      if (currentModalItem && currentModalItem.id) {
+        enrichCurrentModalItem(currentModalItem, enrichBtn);
+      }
+      return;
+    }
+
+    const editBtn = event.target.closest('.modal-edit-btn');
+    if (editBtn) {
+      if (currentModalItem) {
+        const itemToEdit = currentModalItem;
+        modalElement.close();
+        openEditModal(itemToEdit, {
+          onSave: (updatedItem) => {
+            openTitleModal(updatedItem);
+          }
+        });
+      }
+      return;
+    }
+
+    const closeBtn = event.target.closest('.modal-close-btn');
+    if (closeBtn) {
+      modalElement.close();
+      return;
+    }
+
+    // Close when clicking on backdrop
     const rect = modalElement.getBoundingClientRect();
     const isInDialog = (
       rect.top <= event.clientY &&
@@ -23,14 +54,9 @@ export function initModal() {
     }
   });
 
-  // Close button inside modal
-  const closeBtn = modalElement.querySelector('.modal-close-btn');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => modalElement.close());
-  }
-
   // Remove id parameter from URL upon modal close
   modalElement.addEventListener('close', () => {
+    currentModalItem = null;
     const url = new URL(window.location.href);
     if (url.searchParams.has('id') || url.searchParams.has('title')) {
       url.searchParams.delete('id');
@@ -486,6 +512,7 @@ export function openTitleModalById(id) {
 
 export function openTitleModal(titleItem, updateHistory = true) {
   if (!modalElement || !titleItem) return;
+  currentModalItem = titleItem;
 
   const primaryPoster = titleItem.local_poster || titleItem.poster || getSvgPlaceholder(titleItem.title_ua);
   const svgPlaceholder = getSvgPlaceholder(titleItem.title_ua);
@@ -726,12 +753,25 @@ export function openTitleModal(titleItem, updateHistory = true) {
   const modalContent = modalElement.querySelector('.modal-inner');
   if (modalContent) {
     modalContent.innerHTML = `
-      <button class="modal-close-btn" aria-label="Закрити вікно">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+      <div class="modal-top-actions">
+        <button type="button" class="modal-action-btn modal-enrich-hikka-btn" title="Оновити дані через Hikka API" aria-label="Оновити дані через Hikka API">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </button>
+        <button type="button" class="modal-action-btn modal-edit-btn" title="Редагувати тайтл" aria-label="Редагувати тайтл">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+        <button type="button" class="modal-action-btn modal-close-btn" title="Закрити вікно" aria-label="Закрити вікно">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
 
       <div class="modal-sidebar">
         <div class="modal-poster-wrap">
@@ -923,12 +963,6 @@ export function openTitleModal(titleItem, updateHistory = true) {
       </div>
     `;
 
-    // Reattach close button handler
-    const dynamicCloseBtn = modalContent.querySelector('.modal-close-btn');
-    if (dynamicCloseBtn) {
-      dynamicCloseBtn.addEventListener('click', () => modalElement.close());
-    }
-
     // Attach Toggle All Tracks Handler
     const toggleTracksBtn = modalContent.querySelector('.btn-toggle-all-tracks');
     if (toggleTracksBtn) {
@@ -1107,5 +1141,52 @@ export function openTitleModal(titleItem, updateHistory = true) {
       const targetUrl = url.pathname + url.search + url.hash;
       history.pushState({ modalTitleId: titleItem.id }, '', targetUrl);
     }
+  }
+}
+
+async function enrichCurrentModalItem(item, btn) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+
+  try {
+    const res = await fetch('/api/hikka/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.id })
+    });
+    const data = await res.json();
+
+    if (data.success && data.updated) {
+      const enriched = data.data || {};
+      if (enriched.director) item.director = enriched.director;
+      if (enriched.studio) item.studio = enriched.studio;
+      if (enriched.country) item.country = enriched.country;
+      if (enriched.synopsis) item.synopsis = enriched.synopsis;
+      if (enriched.genres && enriched.genres.length > 0) item.genres = enriched.genres;
+
+      // Sync with global catalog in-memory object
+      const catTitles = window.TOLOKA_CATALOG?.titles || [];
+      const catItem = catTitles.find(t => t.id === item.id);
+      if (catItem && catItem !== item) {
+        Object.assign(catItem, item);
+      }
+
+      const fieldsMsg = data.fields_enriched ? data.fields_enriched.join(', ') : 'дані';
+      showToast(`Оновлено через Hikka: ${fieldsMsg}`);
+
+      // Re-render modal in place without altering URL history
+      openTitleModal(item, false);
+    } else {
+      showToast(data.message || 'Нових даних на Hikka не знайдено');
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    }
+  } catch (err) {
+    console.error('Помилка збагачення з Hikka:', err);
+    showToast('Помилка запиту до сервера');
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
   }
 }

@@ -38,6 +38,12 @@ export function initParserView() {
   const badgeIncompleteWrap = document.getElementById('parser-incomplete-badge-wrap');
   let cachedIncompleteItems = [];
 
+  // Compilation controls
+  const btnEnrichCompilations = document.getElementById('btn-enrich-compilations');
+  const btnFilterCompilations = document.getElementById('btn-filter-compilations');
+  const badgeFilterCompilations = document.getElementById('badge-filter-compilations');
+  let cachedCompilationItems = [];
+
   // Login Modal elements
   const loginModal = document.getElementById('toloka-login-modal');
   const loginForm = document.getElementById('toloka-login-form');
@@ -62,6 +68,7 @@ export function initParserView() {
     if (btnFilterNew) btnFilterNew.classList.toggle('active', filterType === 'new');
     if (btnFilterAll) btnFilterAll.classList.toggle('active', filterType === 'all');
     if (btnFilterIncomplete) btnFilterIncomplete.classList.toggle('active', filterType === 'incomplete');
+    if (btnFilterCompilations) btnFilterCompilations.classList.toggle('active', filterType === 'compilations');
 
     if (filterType === 'incomplete') {
       if (cachedIncompleteItems.length === 0) {
@@ -69,6 +76,10 @@ export function initParserView() {
         await loadIncompleteList();
       }
       renderIncompleteResults(cachedIncompleteItems);
+    } else if (filterType === 'compilations') {
+      if (resultsGrid) resultsGrid.innerHTML = '<div class="parser-empty-msg">Завантаження збірників із БД...</div>';
+      await loadCompilationList();
+      renderCompilationResults(cachedCompilationItems);
     } else {
       renderResults(cachedItems);
     }
@@ -83,6 +94,7 @@ export function initParserView() {
   if (btnFilterIncomplete) {
     btnFilterIncomplete.addEventListener('click', () => setFilter('incomplete'));
   }
+  btnFilterCompilations?.addEventListener('click', () => setFilter('compilations'));
 
   if (badgeIncompleteWrap) {
     const handleIncompleteBadgeClick = () => {
@@ -158,6 +170,13 @@ export function initParserView() {
     });
   }
 
+  // Enrich All Compilations Button
+  btnEnrichCompilations?.addEventListener('click', () => {
+    const savedUser = sessionStorage.getItem('toloka_username') ?? '';
+    const savedPass = sessionStorage.getItem('toloka_password') ?? '';
+    startCompilationsEnrichProcess(savedUser, savedPass);
+  });
+
   // Sync Catalog Button
   if (btnSyncCatalog) {
     btnSyncCatalog.addEventListener('click', async () => {
@@ -189,6 +208,7 @@ export function initParserView() {
   async function checkServerStatus() {
     try {
       loadIncompleteStats();
+      loadCompilationStats();
       const res = await fetch('/api/parser/status');
       if (res.ok) {
         const data = await res.json();
@@ -232,6 +252,61 @@ export function initParserView() {
       console.error('Помилка завантаження неповних роздач:', err);
     }
     return [];
+  }
+
+  async function loadCompilationStats() {
+    try {
+      const res = await fetch('/api/parser/compilations-stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (badgeFilterCompilations) badgeFilterCompilations.textContent = data.compilation_candidates_count ?? 0;
+    } catch {}
+  }
+
+  async function loadCompilationList() {
+    try {
+      const res = await fetch('/api/parser/compilations-list');
+      if (!res.ok) return cachedCompilationItems;
+      const data = await res.json();
+      cachedCompilationItems = data.items ?? [];
+      if (badgeFilterCompilations) badgeFilterCompilations.textContent = data.count ?? cachedCompilationItems.length;
+    } catch (err) {
+      console.error('Помилка завантаження збірників:', err);
+    }
+    return cachedCompilationItems;
+  }
+
+  async function startCompilationsEnrichProcess(username, password) {
+    lastLogId = 0;
+    if (consoleLogs) consoleLogs.innerHTML = '';
+    cachedItems = [];
+    renderResults([]);
+
+    appendLog('Запуск пошуку та розбиття роздач-збірників на окремі тайтли...', 'info');
+    statusIndicator?.classList.add('running');
+    if (statusText) statusText.textContent = 'Збагачення збірників...';
+
+    try {
+      const res = await fetch('/api/parser/enrich-compilations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (res.ok) {
+        appendLog('Запит прийнято сервером.', 'success');
+        setFilter('all');
+        startPolling();
+      } else {
+        appendLog(`Помилка: ${await res.text()}`, 'error');
+        statusIndicator?.classList.remove('running');
+        if (statusText) statusText.textContent = 'Помилка';
+      }
+    } catch {
+      appendLog('Локальний сервер недоступний. Запустіть «python server.py» у терміналі.', 'error');
+      statusIndicator?.classList.remove('running');
+      if (statusText) statusText.textContent = 'Сервер офлайн';
+    }
   }
 
   async function startEnrichProcess(count, username, password) {
@@ -326,8 +401,11 @@ export function initParserView() {
           if (statusText) statusText.textContent = data.status === 'completed' ? 'Завершено' : 'Зупинено';
           appendLog(data.message || 'Парсинг завершено.', 'success');
           loadIncompleteStats();
+          loadCompilationStats();
           if (currentFilter === 'incomplete') {
             loadIncompleteList(true).then(items => renderIncompleteResults(items));
+          } else if (currentFilter === 'compilations') {
+            loadCompilationList().then(items => renderCompilationResults(items));
           }
         }
       } catch {
@@ -363,7 +441,10 @@ export function initParserView() {
     if (data.recent_items) {
       cachedItems = data.recent_items;
       updateFilterBadges(cachedItems);
-      renderResults(cachedItems);
+      // DB-backed views (incomplete / compilations) must not be overwritten by live results
+      if (currentFilter === 'new' || currentFilter === 'all') {
+        renderResults(cachedItems);
+      }
     }
   }
 
@@ -408,11 +489,14 @@ export function initParserView() {
       const badge = item.is_new 
         ? `<span class="parser-badge-new">НОВИЙ</span>` 
         : `<span class="parser-badge-exist">В базі</span>`;
+      const compBadge = item.is_compilation
+        ? `<span class="parser-badge-compilation enriched">Збірник · <span class="counter">${item.parts_count ?? 0}</span> част.</span>`
+        : '';
 
       el.innerHTML = `
         <div class="parser-result-id">#${item.topic_id}</div>
         <div class="parser-result-title">${escapeHtml(item.title)}</div>
-        ${badge}
+        ${badge}${compBadge}
         <div class="parser-result-actions">
           <button type="button" class="parser-btn-view" data-topic-id="${item.topic_id}" title="Швидкий перегляд тайтлу у модальному вікні">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -523,6 +607,65 @@ export function initParserView() {
     }
   }
 
+  function renderCompilationResults(items) {
+    if (!resultsGrid) return;
+    resultsGrid.innerHTML = '';
+
+    if (!items?.length) {
+      resultsGrid.innerHTML = '<div class="parser-empty-msg"><p>Роздач-збірників у базі даних не знайдено.</p></div>';
+      return;
+    }
+
+    for (const item of items) {
+      const el = document.createElement('div');
+      el.className = 'parser-result-item';
+
+      const stateBadge = item.is_compilation
+        ? `<span class="parser-badge-compilation enriched">Розібрано · <span class="counter">${item.parts_count}</span> част.</span>`
+        : `<span class="parser-badge-compilation candidate">Кандидат · не розібрано</span>`;
+
+      el.innerHTML = `
+        <div class="parser-result-id">#${item.topic_id}</div>
+        <div class="parser-result-title">${escapeHtml(item.title)}</div>
+        <div class="parser-missing-tags">${stateBadge}</div>
+        <div class="parser-result-actions">
+          <button type="button" class="parser-btn-enrich-single" title="Повторно завантажити та розбити збірник на окремі тайтли">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+            <span>${item.is_compilation ? 'Оновити' : 'Розібрати'}</span>
+          </button>
+          <button type="button" class="parser-btn-view" title="Швидкий перегляд тайтлу у модальному вікні">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Перегляд</span>
+          </button>
+          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-subtle btn-icon" title="Відкрити тему на Toloka">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
+      `;
+
+      const btnEnrich = el.querySelector('.parser-btn-enrich-single');
+      btnEnrich?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = await enrichSingleItem(item, btnEnrich, el);
+        if (ok) loadCompilationStats();
+      });
+
+      el.querySelector('.parser-btn-view')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openQuickModal(item);
+      });
+
+      resultsGrid.appendChild(el);
+    }
+  }
+
   async function enrichSingleItem(item, btnEl, rowEl) {
     const savedUser = sessionStorage.getItem('toloka_username') || '';
     const savedPass = sessionStorage.getItem('toloka_password') || '';
@@ -548,20 +691,50 @@ export function initParserView() {
       const resData = await res.json();
       if (res.ok && resData.success) {
         appendLog(`✓ Успішно збагачено #${item.topic_id}`, 'success');
-        if (spanText) spanText.textContent = 'Збагачено';
-        btnEl.classList.remove('loading');
-        btnEl.disabled = true;
+        const isComp = Boolean(resData.is_compilation || item.is_compilation);
+        const partsCount = resData.parts_count || item.parts_count || 0;
 
         const tagsContainer = rowEl.querySelector('.parser-missing-tags');
         if (tagsContainer) {
-          tagsContainer.innerHTML = '<span class="parser-tag-missing enriched">✓ Дані оновлено</span>';
+          if (isComp) {
+            tagsContainer.innerHTML = `<span class="parser-badge-compilation enriched">Розібрано · <span class="counter">${partsCount}</span> част.</span>`;
+            item.is_compilation = true;
+            item.parts_count = partsCount;
+          } else {
+            tagsContainer.innerHTML = '<span class="parser-tag-missing enriched">✓ Дані оновлено</span>';
+          }
+        }
+
+        if (isComp) {
+          btnEl.classList.remove('loading');
+          btnEl.disabled = false;
+          if (spanText) spanText.textContent = 'Оновити';
+        } else {
+          btnEl.classList.remove('loading');
+          btnEl.disabled = true;
         }
 
         // Update counts and cached list
-        cachedIncompleteItems = cachedIncompleteItems.filter(i => i.topic_id !== item.topic_id);
-        const newCount = cachedIncompleteItems.length;
-        if (incompleteCountEl) incompleteCountEl.textContent = newCount;
-        if (badgeFilterIncomplete) badgeFilterIncomplete.textContent = newCount;
+        if (currentFilter === 'compilations') {
+          if (cachedCompilationItems.length > 0) {
+            const compTarget = cachedCompilationItems.find(i => i.topic_id === item.topic_id);
+            if (compTarget) {
+              compTarget.is_compilation = true;
+              compTarget.parts_count = partsCount;
+            }
+          }
+          loadCompilationStats();
+        } else {
+          if (cachedIncompleteItems.length > 0) {
+            cachedIncompleteItems = cachedIncompleteItems.filter(i => i.topic_id !== item.topic_id);
+            const newCount = cachedIncompleteItems.length;
+            if (incompleteCountEl) incompleteCountEl.textContent = newCount;
+            if (badgeFilterIncomplete) badgeFilterIncomplete.textContent = newCount;
+          } else {
+            loadIncompleteStats();
+          }
+        }
+        return true;
       } else {
         const errMsg = resData.error || 'Помилка';
         appendLog(`Помилка збагачення #${item.topic_id}: ${errMsg}`, 'error');
@@ -575,6 +748,7 @@ export function initParserView() {
       btnEl.disabled = false;
       if (spanText) spanText.textContent = 'Повторити';
     }
+    return false;
   }
 
   function openQuickModal(item) {
@@ -616,4 +790,5 @@ export function initParserView() {
   }
 
   loadIncompleteStats();
+  loadCompilationStats();
 }

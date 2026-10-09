@@ -43,6 +43,7 @@ class TaskState(MutableMapping):
         with self.lock:
             d = dict(self._data)
             d["latest_logs"] = list(self._data.get("latest_logs", []))
+            d["recent_items"] = list(self._data.get("recent_items", []))
             return d
 
     # MutableMapping interface

@@ -38,6 +38,19 @@ CATALOG_COLS = """
     files, seeders, torrent_size, registered_at, is_compilation
 """
 
+# Маркери у назві, за якими роздача вважається кандидатом у збірники
+COMPILATION_TITLE_KEYWORDS = (
+    "колекція", "колекция", "збірка", "збірник", "collection", "antologia",
+    "фільмографія", "трилогія", "дилогія", "квадрологія", "(фільми", "фільми 1-",
+)
+
+def compilation_candidate_filter(alias=""):
+    """Return (sql_fragment, params) matching confirmed or candidate compilation topics."""
+    p = f"{alias}." if alias else ""
+    likes = " OR ".join(f"{p}title LIKE ?" for _ in COMPILATION_TITLE_KEYWORDS)
+    params = tuple(f"%{kw}%" for kw in COMPILATION_TITLE_KEYWORDS)
+    return f"({p}is_compilation = 1 OR {likes})", params
+
 def get_toloka_credentials(username="", password=""):
     """Fetch credentials from args or fallback to VOC-ALL/.env"""
     if username and password:

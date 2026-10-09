@@ -43,6 +43,7 @@ from backend.services.titles import (
     get_title_by_id,
     update_title,
     batch_update_titles,
+    delete_title,
     rebuild_catalog_sync
 )
 from backend.services.fallback import (
@@ -223,6 +224,16 @@ class AppRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 tid = update_title(req_data)
                 self.send_json({"success": True, "id": tid})
+            except ValueError as ve:
+                self.send_error_json(str(ve), status=400)
+            except Exception as e:
+                self.send_error_json(str(e), status=500)
+            return
+
+        elif self.path == "/api/titles/delete":
+            try:
+                res = delete_title(req_data)
+                self.send_json(res)
             except ValueError as ve:
                 self.send_error_json(str(ve), status=400)
             except Exception as e:

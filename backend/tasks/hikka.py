@@ -23,9 +23,11 @@ hikka_state = TaskState({
     "missing_synopsis": 0,
     "missing_country": 0,
     "enriched_count": 0,
+    "processed_count": 0,
     "latest_logs": [],
     "recent_items": []
 })
+
 
 
 def add_hikka_log(text: str, log_type: str = "info"):
@@ -78,14 +80,33 @@ def run_background_hikka_enrich(limit: int = 50, filter_type: str = "all"):
         status="running",
         message=f"Збагачення тайтлів через Hikka API (ліміт: {limit})...",
         enriched_count=0,
+        processed_count=0,
         recent_items=[]
     )
 
     add_hikka_log(f"Запуск збагачення через Hikka API (фільтр: {filter_type}, ліміт: {limit})...", "info")
 
+    def on_item(processed, total, enriched, item):
+        with hikka_state.lock:
+            hikka_state["processed_count"] = processed
+            hikka_state["total_candidates"] = total
+            hikka_state["enriched_count"] = enriched
+            if item:
+                recent = list(hikka_state.get("recent_items", []))
+                recent.append(item)
+                if len(recent) > 60:
+                    recent = recent[-60:]
+                hikka_state["recent_items"] = recent
+
     try:
-        res = batch_enrich_hikka(limit=limit, filter_type=filter_type, on_progress=add_hikka_log)
+        res = batch_enrich_hikka(
+            limit=limit,
+            filter_type=filter_type,
+            on_progress=add_hikka_log,
+            on_item_done=on_item
+        )
         enriched_count = res.get("enriched_count", 0)
+
 
         # Rebuild catalog data so front-end reflects changes
         add_hikka_log("Перебудова data/catalog.js...", "info")

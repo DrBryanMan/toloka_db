@@ -7,7 +7,10 @@ import subprocess
 import threading
 from bs4 import BeautifulSoup
 
-from backend.config import BASE_DIR, DB_PATH, FOR_AGENTS_DIR, CATALOG_COLS, get_toloka_credentials, get_db
+from backend.config import (
+    BASE_DIR, DB_PATH, FOR_AGENTS_DIR, CATALOG_COLS,
+    get_toloka_credentials, get_db, compilation_candidate_filter
+)
 from backend.state import TaskState
 from backend.session import create_toloka_session, fetch_url, DEFAULT_HEADERS
 
@@ -23,6 +26,75 @@ scraper_state = TaskState({
 
 def add_log(text, log_type="info"):
     scraper_state.add_log(text, log_type)
+
+
+def _update_topic_row(cur, tid, data, is_comp, set_voc_teams=False):
+    """Write freshly parsed topic data into an existing topics row.
+
+    Empty title/type/quality/poster/download/size/dates keep their old values.
+    voc_teams is overwritten only when set_voc_teams is True.
+    """
+    voc_sql = "voc_teams = ?," if set_voc_teams else ""
+    params = [
+        data["title"], data["content_type"], data["uploader"], data["uploader_id"],
+        data["genres"], data["country"], data["studio"], data["director"],
+        data["synopsis"], data["duration_raw"], data["episode_list"],
+        data["episode_count"], data["episode_count_is_guess"], data["quality"],
+        data["poster_url"], data["download_url"],
+        data.get("torrent_size", ""), data.get("registered_at", ""), data.get("torrent_edited_at", ""),
+        data["files"], data["raw_fields"], data["original_credits"], data["adaptation_team"],
+        data["content_hash"], data["source_file"], data.get("part"), data.get("has_sub", 0), is_comp,
+    ]
+    if set_voc_teams:
+        params.append(data.get("voc_teams"))
+    params.append(tid)
+
+    cur.execute(f"""
+        UPDATE topics SET 
+            title = COALESCE(NULLIF(?, ''), title),
+            content_type = COALESCE(NULLIF(?, ''), content_type),
+            uploader = ?,
+            uploader_id = ?,
+            genres = ?,
+            country = ?,
+            studio = ?,
+            director = ?,
+            synopsis = ?,
+            duration_raw = ?,
+            episode_list = ?,
+            episode_count = COALESCE(?, episode_count),
+            episode_count_is_guess = ?,
+            quality = COALESCE(NULLIF(?, ''), quality),
+            poster_url = COALESCE(NULLIF(?, ''), poster_url),
+            download_url = COALESCE(NULLIF(?, ''), download_url),
+            torrent_size = COALESCE(NULLIF(?, ''), torrent_size),
+            registered_at = COALESCE(NULLIF(?, ''), registered_at),
+            torrent_edited_at = COALESCE(NULLIF(?, ''), torrent_edited_at),
+            files = ?,
+            raw_fields = ?,
+            original_credits = ?,
+            adaptation_team = ?,
+            content_hash = ?,
+            source_file = ?,
+            part = ?,
+            has_sub = ?,
+            is_compilation = ?,
+            {voc_sql}
+            updated_at = datetime('now')
+        WHERE topic_id = ?
+    """, params)
+
+
+def _safe_download_poster(topic_id, poster_url, title):
+    """Safely download poster without throwing if poster module fails."""
+    if not poster_url:
+        return False
+    try:
+        import download_posters
+        ok, _, _ = download_posters.download_single_poster((topic_id, poster_url, title))
+        return bool(ok)
+    except Exception:
+        return False
 
 
 def run_background_parse(pages=1, username="", password=""):
@@ -256,7 +328,6 @@ def run_background_enrich(count=20, username="", password="", incomplete_only=Tr
 
     try:
         from toloka_parser_engine import parse_topic_full_data
-        import download_posters
 
         session = create_toloka_session(username, password, on_log=add_log)
 
@@ -310,48 +381,7 @@ def run_background_enrich(count=20, username="", password="", incomplete_only=Tr
                         except Exception as c_err:
                             add_log(f"Помилка аналізу збірника #{tid}: {c_err}", "warn")
 
-                        cur.execute("""
-                            UPDATE topics SET 
-                                title = COALESCE(NULLIF(?, ''), title),
-                                content_type = COALESCE(NULLIF(?, ''), content_type),
-                                uploader = ?,
-                                uploader_id = ?,
-                                genres = ?,
-                                country = ?,
-                                studio = ?,
-                                director = ?,
-                                synopsis = ?,
-                                duration_raw = ?,
-                                episode_list = ?,
-                                episode_count = COALESCE(?, episode_count),
-                                episode_count_is_guess = ?,
-                                quality = COALESCE(NULLIF(?, ''), quality),
-                                poster_url = COALESCE(NULLIF(?, ''), poster_url),
-                                download_url = COALESCE(NULLIF(?, ''), download_url),
-                                torrent_size = COALESCE(NULLIF(?, ''), torrent_size),
-                                registered_at = COALESCE(NULLIF(?, ''), registered_at),
-                                torrent_edited_at = COALESCE(NULLIF(?, ''), torrent_edited_at),
-                                files = ?,
-                                raw_fields = ?,
-                                original_credits = ?,
-                                adaptation_team = ?,
-                                content_hash = ?,
-                                source_file = ?,
-                                part = ?,
-                                has_sub = ?,
-                                is_compilation = ?,
-                                updated_at = datetime('now')
-                            WHERE topic_id = ?
-                        """, (
-                            data["title"], data["content_type"], data["uploader"], data["uploader_id"],
-                            data["genres"], data["country"], data["studio"], data["director"],
-                            data["synopsis"], data["duration_raw"], data["episode_list"],
-                            data["episode_count"], data["episode_count_is_guess"], data["quality"],
-                            data["poster_url"], data["download_url"],
-                            data.get("torrent_size", ""), data.get("registered_at", ""), data.get("torrent_edited_at", ""),
-                            data["files"], data["raw_fields"], data["original_credits"], data["adaptation_team"],
-                            data["content_hash"], data["source_file"], part_val, has_sub_val, is_comp_val, tid
-                        ))
+                        _update_topic_row(cur, tid, data, is_comp_val)
                         con.commit()
                         enriched_count += 1
 
@@ -368,13 +398,8 @@ def run_background_enrich(count=20, username="", password="", incomplete_only=Tr
                                 pass
 
                         if data.get("poster_url"):
-
-                            try:
-                                dl_ok, _, _ = download_posters.download_single_poster((tid, data["poster_url"], data["title"]))
-                                if dl_ok:
-                                    add_log(f"  └ Постер збережено локально для #{tid}", "info")
-                            except Exception:
-                                pass
+                            if _safe_download_poster(tid, data["poster_url"], data["title"]):
+                                add_log(f"  └ Постер збережено локально для #{tid}", "info")
 
                         ep_info = f"{data['episode_count']} сер." if data['episode_count'] else "тривалість"
                         up_info = f"автор: {data['uploader']}" if data['uploader'] else "без автора"
@@ -422,7 +447,6 @@ def enrich_single_topic_sync(tid, username="", password=""):
     try:
         from toloka_parser_engine import parse_topic_full_data
         from build_catalog_data import format_catalog_item
-        import download_posters
 
         session = create_toloka_session(username, password)
         item_url = f"https://toloka.to/t{tid}"
@@ -450,6 +474,7 @@ def enrich_single_topic_sync(tid, username="", password=""):
 
             # Check and extract compilation / collection releases
             is_comp_val = 0
+            comp_items = []
             try:
                 from compilation_parser import is_compilation_release, process_compilation_topic, save_compilation_items
                 soup_topic = BeautifulSoup(resp.text, "html.parser")
@@ -457,53 +482,16 @@ def enrich_single_topic_sync(tid, username="", password=""):
                     comp_items, data = process_compilation_topic(tid, item_url, resp.text, data)
                     save_compilation_items(tid, comp_items, cur)
                     is_comp_val = 1
+                    for c_it in comp_items:
+                        p_url = c_it.get("poster_url")
+                        if p_url:
+                            _safe_download_poster(c_it["item_id"], p_url, c_it["title"])
                 else:
                     cur.execute("DELETE FROM compilation_items WHERE parent_topic_id = ?", (tid,))
             except Exception as c_err:
                 pass
 
-            cur.execute("""
-                UPDATE topics SET 
-                    title = COALESCE(NULLIF(?, ''), title),
-                    content_type = COALESCE(NULLIF(?, ''), content_type),
-                    uploader = ?,
-                    uploader_id = ?,
-                    genres = ?,
-                    country = ?,
-                    studio = ?,
-                    director = ?,
-                    synopsis = ?,
-                    duration_raw = ?,
-                    episode_list = ?,
-                    episode_count = COALESCE(?, episode_count),
-                    episode_count_is_guess = ?,
-                    quality = COALESCE(NULLIF(?, ''), quality),
-                    poster_url = COALESCE(NULLIF(?, ''), poster_url),
-                    download_url = COALESCE(NULLIF(?, ''), download_url),
-                    torrent_size = COALESCE(NULLIF(?, ''), torrent_size),
-                    registered_at = COALESCE(NULLIF(?, ''), registered_at),
-                    torrent_edited_at = COALESCE(NULLIF(?, ''), torrent_edited_at),
-                    files = ?,
-                    raw_fields = ?,
-                    original_credits = ?,
-                    adaptation_team = ?,
-                    content_hash = ?,
-                    source_file = ?,
-                    part = ?,
-                    has_sub = ?,
-                    is_compilation = ?,
-                    updated_at = datetime('now')
-                WHERE topic_id = ?
-            """, (
-                data["title"], data["content_type"], data["uploader"], data["uploader_id"],
-                data["genres"], data["country"], data["studio"], data["director"],
-                data["synopsis"], data["duration_raw"], data["episode_list"],
-                data["episode_count"], data["episode_count_is_guess"], data["quality"],
-                data["poster_url"], data["download_url"],
-                data.get("torrent_size", ""), data.get("registered_at", ""), data.get("torrent_edited_at", ""),
-                data["files"], data["raw_fields"], data["original_credits"], data["adaptation_team"],
-                data["content_hash"], data["source_file"], part_val, has_sub_val, is_comp_val, tid
-            ))
+            _update_topic_row(cur, tid, data, is_comp_val)
             con.commit()
 
             # Hikka API enrichment fallback for missing metadata
@@ -516,17 +504,19 @@ def enrich_single_topic_sync(tid, username="", password=""):
                     pass
 
             if data.get("poster_url"):
-                try:
-                    download_posters.download_single_poster((tid, data["poster_url"], data["title"]))
-                except Exception:
-                    pass
+                _safe_download_poster(tid, data["poster_url"], data["title"])
 
         # Trigger catalog rebuild in background
         threading.Thread(target=lambda: subprocess.run([sys.executable, str(FOR_AGENTS_DIR / "build_catalog_data.py")], cwd=str(BASE_DIR), check=False), daemon=True).start()
 
         from backend.services.titles import get_title_by_id
         item_formatted = get_title_by_id(tid)
-        return {"success": True, "title": item_formatted}
+        return {
+            "success": True,
+            "title": item_formatted,
+            "is_compilation": bool(is_comp_val),
+            "parts_count": len(comp_items) if is_comp_val else 0
+        }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -553,30 +543,17 @@ def run_background_compilations_enrich(username="", password=""):
     try:
         from compilation_parser import is_compilation_release, process_compilation_topic, save_compilation_items
         from toloka_parser_engine import parse_topic_full_data
-        import download_posters
 
         session = create_toloka_session(username, password, on_log=add_log)
 
+        where_sql, params = compilation_candidate_filter()
         with get_db() as con:
             cur = con.cursor()
-            cur.execute("""
+            cur.execute(f"""
                 SELECT topic_id, url, title, is_compilation FROM topics 
-                WHERE 
-                    is_compilation = 1
-                    OR title LIKE '%колекція%'
-                    OR title LIKE '%колекция%'
-                    OR title LIKE '%збірка%'
-                    OR title LIKE '%збірник%'
-                    OR title LIKE '%collection%'
-                    OR title LIKE '%antologia%'
-                    OR title LIKE '%фільмографія%'
-                    OR title LIKE '%трилогія%'
-                    OR title LIKE '%дилогія%'
-                    OR title LIKE '%квадрологія%'
-                    OR title LIKE '%(фільми%'
-                    OR title LIKE '%фільми 1-%'
+                WHERE {where_sql}
                 ORDER BY topic_id DESC
-            """)
+            """, params)
             candidate_rows = cur.fetchall()
 
         total_candidates = len(candidate_rows)
@@ -610,53 +587,7 @@ def run_background_compilations_enrich(username="", password=""):
                         comp_items, updated_parent = process_compilation_topic(tid, target_url, resp.text, full_data)
                         save_compilation_items(tid, comp_items, cur)
                         
-                        part_val = updated_parent.get("part")
-                        has_sub_val = updated_parent.get("has_sub", 0)
-
-                        cur.execute("""
-                            UPDATE topics SET 
-                                title = COALESCE(NULLIF(?, ''), title),
-                                content_type = COALESCE(NULLIF(?, ''), content_type),
-                                uploader = ?,
-                                uploader_id = ?,
-                                genres = ?,
-                                country = ?,
-                                studio = ?,
-                                director = ?,
-                                synopsis = ?,
-                                duration_raw = ?,
-                                episode_list = ?,
-                                episode_count = COALESCE(?, episode_count),
-                                episode_count_is_guess = ?,
-                                quality = COALESCE(NULLIF(?, ''), quality),
-                                poster_url = COALESCE(NULLIF(?, ''), poster_url),
-                                download_url = COALESCE(NULLIF(?, ''), download_url),
-                                torrent_size = COALESCE(NULLIF(?, ''), torrent_size),
-                                registered_at = COALESCE(NULLIF(?, ''), registered_at),
-                                torrent_edited_at = COALESCE(NULLIF(?, ''), torrent_edited_at),
-                                files = ?,
-                                raw_fields = ?,
-                                original_credits = ?,
-                                adaptation_team = ?,
-                                content_hash = ?,
-                                source_file = ?,
-                                part = ?,
-                                has_sub = ?,
-                                is_compilation = 1,
-                                voc_teams = ?,
-                                updated_at = datetime('now')
-                            WHERE topic_id = ?
-                        """, (
-                            updated_parent["title"], updated_parent["content_type"], updated_parent["uploader"], updated_parent["uploader_id"],
-                            updated_parent["genres"], updated_parent["country"], updated_parent["studio"], updated_parent["director"],
-                            updated_parent["synopsis"], updated_parent["duration_raw"], updated_parent["episode_list"],
-                            updated_parent["episode_count"], updated_parent["episode_count_is_guess"], updated_parent["quality"],
-                            updated_parent["poster_url"], updated_parent["download_url"],
-                            updated_parent.get("torrent_size", ""), updated_parent.get("registered_at", ""), updated_parent.get("torrent_edited_at", ""),
-                            updated_parent["files"], updated_parent["raw_fields"], updated_parent["original_credits"], updated_parent["adaptation_team"],
-                            updated_parent["content_hash"], updated_parent["source_file"], part_val, has_sub_val,
-                            updated_parent.get("voc_teams"), tid
-                        ))
+                        _update_topic_row(cur, tid, updated_parent, 1, set_voc_teams=True)
                         con.commit()
 
                         processed_compilations += 1
@@ -680,10 +611,7 @@ def run_background_compilations_enrich(username="", password=""):
                         for c_it in comp_items:
                             p_url = c_it.get("poster_url")
                             if p_url:
-                                try:
-                                    download_posters.download_single_poster((c_it["item_id"], p_url, c_it["title"]))
-                                except Exception:
-                                    pass
+                                _safe_download_poster(c_it["item_id"], p_url, c_it["title"])
                     else:
                         cur.execute("UPDATE topics SET is_compilation = 0 WHERE topic_id = ?", (tid,))
                         cur.execute("DELETE FROM compilation_items WHERE parent_topic_id = ?", (tid,))

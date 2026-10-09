@@ -15,6 +15,7 @@ import { initExtSyncView } from './components/extSyncView.js';
 import { initPosterDownloaderView } from './components/posterDownloaderView.js';
 import { initIncompleteView } from './components/incompleteView.js';
 import { initFallbackModal, openFallbackModal } from './components/fallbackModal.js';
+import { initDeleteModal } from './components/deleteModal.js';
 import { initTheme } from './components/theme.js';
 import { 
   initRouter, 
@@ -98,6 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initPosterDownloaderView();
   initIncompleteView();
   initFallbackModal();
+  initDeleteModal();
   initRouter();
 
   // Initialize State

@@ -492,3 +492,11 @@ main.content-area {
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--color-border-bright);
 }
+
+/* Background scroll lock when any modal is open */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+

@@ -62,7 +62,7 @@
       </div>
 
       <!-- Search Bar -->
-      <div class="search-container">
+      <div class="search-container" id="search-container">
         <div class="search-input-wrapper">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
@@ -85,8 +85,15 @@
         </div>
       </div>
 
-      <!-- Header Actions: Theme Toggle & Tools Dropdown -->
+      <!-- Header Actions: Mobile Search Trigger, Theme Toggle & Tools Dropdown -->
       <div class="header-actions">
+        <button type="button" class="btn btn-subtle btn-search-mobile-trigger" id="btn-search-mobile-trigger" aria-label="Пошук" title="Пошук по каталогу">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+
         <button type="button" class="btn btn-subtle btn-theme-toggle" id="btn-theme-toggle" aria-label="Змінити тему" title="Увімкнути світлу тему">
           <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
@@ -198,7 +205,7 @@
     <!-- Filter Controls Bar -->
     <section class="filters-section" aria-label="Панель фільтрів та сортування">
       <!-- Filters Bar with stats-pill as the FIRST section -->
-      <div class="filters-bar">
+      <div class="filters-bar" id="filters-bar">
         <!-- 1. Stats Counter (first section) -->
         <div class="stats-pill-section">
           <div class="stats-pill">
@@ -207,9 +214,95 @@
           </div>
         </div>
 
-        <div class="filter-controls-row">
-          <!-- Years Custom Select -->
-          <div class="filter-select-group">
+        <!-- Mobile Filter Toggle Button -->
+        <button type="button" class="btn btn-subtle filter-toggle-btn" id="btn-toggle-filters" aria-expanded="false" aria-controls="filters-collapsible" title="Фільтри">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <span class="filter-toggle-label">Фільтри</span>
+          <span class="filter-badge" id="filter-active-count" hidden>0</span>
+        </button>
+
+        <!-- Collapsible Filters Area (on mobile, toggled by button; on desktop, always visible) -->
+        <div class="filters-collapsible-wrap" id="filters-collapsible">
+          <div class="filter-controls-row">
+            <!-- Genres Custom Select with Multi-Include / Exclude -->
+            <div class="filter-select-group filter-genres-group">
+              <span class="filter-label" id="label-genres">Жанри</span>
+              <div class="custom-select genre-select" id="custom-select-genres" data-name="genres">
+                <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-genres">
+                  <span class="custom-select-value">Всі жанри</span>
+                  <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="custom-select-dropdown genre-select-dropdown" role="listbox">
+                  <div class="genre-dropdown-header">
+                    <input type="text" class="genre-search-filter" id="genre-search-filter" placeholder="Пошук жанру..." autocomplete="off">
+                    <button type="button" class="btn-genre-reset-all" id="btn-genre-reset-all" title="Скинути вибір жанрів">Скинути</button>
+                  </div>
+                  <div class="genre-select-options" id="options-genres"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quality Custom Select -->
+            <div class="filter-select-group">
+              <span class="filter-label" id="label-quality">Якість</span>
+              <div class="custom-select" id="custom-select-quality" data-name="quality">
+                <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-quality">
+                  <span class="custom-select-value">Будь-яка якість</span>
+                  <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="custom-select-dropdown" role="listbox">
+                  <div class="custom-select-options" id="options-quality"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dubbing / Team Custom Select -->
+            <div class="filter-select-group">
+              <span class="filter-label" id="label-team">Озвучення / Переклад</span>
+              <div class="custom-select" id="custom-select-team" data-name="team">
+                <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-team">
+                  <span class="custom-select-value">Всі команди</span>
+                  <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="custom-select-dropdown" role="listbox">
+                  <div class="custom-select-options" id="options-team"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Type Custom Select -->
+            <div class="filter-select-group">
+              <span class="filter-label" id="label-type">Тип</span>
+              <div class="custom-select" id="custom-select-type" data-name="type">
+                <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-type">
+                  <span class="custom-select-value">Усі типи</span>
+                  <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="custom-select-dropdown" role="listbox">
+                  <div class="custom-select-options" id="options-type"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtitles Custom Select -->
+            <div class="filter-select-group">
+              <span class="filter-label" id="label-sub">Субтитри</span>
+              <div class="custom-select" id="custom-select-sub" data-name="sub">
+                <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sub">
+                  <span class="custom-select-value">Всі релізи</span>
+                  <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="custom-select-dropdown" role="listbox">
+                  <div class="custom-select-options" id="options-sub"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Year Custom Select (between filters and sort) -->
+          <div class="filter-select-group filter-year-group">
             <span class="filter-label" id="label-year">Рік виходу</span>
             <div class="custom-select" id="custom-select-year" data-name="year">
               <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-year">
@@ -221,66 +314,10 @@
               </div>
             </div>
           </div>
-
-          <!-- Quality Custom Select -->
-          <div class="filter-select-group">
-            <span class="filter-label" id="label-quality">Якість</span>
-            <div class="custom-select" id="custom-select-quality" data-name="quality">
-              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-quality">
-                <span class="custom-select-value">Будь-яка якість</span>
-                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="custom-select-dropdown" role="listbox">
-                <div class="custom-select-options" id="options-quality"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dubbing / Team Custom Select -->
-          <div class="filter-select-group">
-            <span class="filter-label" id="label-team">Озвучення / Переклад</span>
-            <div class="custom-select" id="custom-select-team" data-name="team">
-              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-team">
-                <span class="custom-select-value">Всі команди</span>
-                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="custom-select-dropdown" role="listbox">
-                <div class="custom-select-options" id="options-team"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Content Type Custom Select -->
-          <div class="filter-select-group">
-            <span class="filter-label" id="label-type">Тип</span>
-            <div class="custom-select" id="custom-select-type" data-name="type">
-              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-type">
-                <span class="custom-select-value">Усі типи</span>
-                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="custom-select-dropdown" role="listbox">
-                <div class="custom-select-options" id="options-type"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Subtitles Custom Select -->
-          <div class="filter-select-group">
-            <span class="filter-label" id="label-sub">Субтитри</span>
-            <div class="custom-select" id="custom-select-sub" data-name="sub">
-              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sub">
-                <span class="custom-select-value">Всі релізи</span>
-                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="custom-select-dropdown" role="listbox">
-                <div class="custom-select-options" id="options-sub"></div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Sort Custom Select -->
-        <div class="filter-select-group">
+        <div class="filter-select-group filter-sort-group">
           <span class="filter-label" id="label-sort">Сортування</span>
           <div class="custom-select" id="custom-select-sort" data-name="sort">
             <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sort">
@@ -293,7 +330,7 @@
           </div>
         </div>
 
-        <!-- View Mode Switcher: Grid vs Table -->
+        <!-- View Mode Switcher: Grid vs Table (last on desktop; on mobile order: 2) -->
         <div class="view-mode-toggle-group">
           <span class="filter-label">Вигляд</span>
           <div class="view-mode-toggle" id="view-mode-toggle" role="group" aria-label="Вигляд каталогу">
@@ -314,11 +351,6 @@
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- 2. Multi-Select Genre Pills Bar (wrapped flex, placed below filters bar) -->
-      <div class="genre-pills-bar" id="genre-pills" role="group" aria-label="Фільтр за жанрами">
-        <!-- Populated by JS -->
       </div>
 
       <!-- 3. Active Filters Row (without search query, genres summarized as count) -->
@@ -931,6 +963,34 @@
     </div>
   </main>
 
+
+  <!-- Centered Search Dialog Modal (Mobile) -->
+  <dialog id="search-modal" class="search-modal" aria-labelledby="search-modal-input">
+    <div class="search-modal-inner">
+      <div class="search-modal-header">
+        <div class="search-modal-input-wrap">
+          <svg class="search-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="search" 
+            id="search-modal-input" 
+            class="search-modal-input" 
+            placeholder="Шукати за назвою, озвучкою..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button type="button" id="search-modal-clear" class="search-modal-clear" aria-label="Очистити">✕</button>
+        </div>
+        <button type="button" id="search-modal-close" class="search-modal-close-btn" aria-label="Закрити">✕</button>
+      </div>
+      <div class="search-modal-body">
+        <div id="search-modal-results" class="search-modal-results"></div>
+        <div id="search-modal-footer" class="search-modal-footer"></div>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Title Details Modal Dialog -->
   <dialog id="title-modal" class="title-modal" aria-labelledby="modal-title">

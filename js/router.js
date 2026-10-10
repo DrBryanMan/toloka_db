@@ -99,6 +99,7 @@ export function parseCatalogParamsFromUrl() {
   const result = {
     search: (params.get('search') || params.get('q') || '').trim(),
     genres: new Set(),
+    excludedGenres: new Set(),
     year: (params.get('year') || '').trim(),
     quality: (params.get('quality') || '').trim(),
     team: (params.get('team') || '').trim(),
@@ -111,7 +112,23 @@ export function parseCatalogParamsFromUrl() {
   const rawGenres = params.get('genres') || params.get('genre') || '';
   if (rawGenres) {
     const list = rawGenres.split(',').map(g => g.trim().toLowerCase()).filter(Boolean);
-    result.genres = new Set(list);
+    for (const g of list) {
+      if (g.startsWith('-') || g.startsWith('!')) {
+        const cleanG = g.slice(1).trim();
+        if (cleanG) result.excludedGenres.add(cleanG);
+      } else {
+        const cleanG = g.startsWith('+') ? g.slice(1).trim() : g;
+        if (cleanG) result.genres.add(cleanG);
+      }
+    }
+  }
+
+  const rawExclGenres = params.get('exclude_genres') || params.get('excluded_genres') || '';
+  if (rawExclGenres) {
+    const exclList = rawExclGenres.split(',').map(g => g.trim().toLowerCase()).filter(Boolean);
+    for (const g of exclList) {
+      result.excludedGenres.add(g);
+    }
   }
 
   const pageVal = parseInt(params.get('page'), 10);
@@ -142,6 +159,10 @@ export function buildCatalogQueryString(appState, activeTitleId = null) {
 
   if (appState.selectedGenres && appState.selectedGenres.size > 0) {
     params.set('genres', Array.from(appState.selectedGenres).join(','));
+  }
+
+  if (appState.excludedGenres && appState.excludedGenres.size > 0) {
+    params.set('exclude_genres', Array.from(appState.excludedGenres).join(','));
   }
 
   if (appState.selectedYear) {

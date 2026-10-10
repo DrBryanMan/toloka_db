@@ -6,6 +6,7 @@ class AppState {
   constructor() {
     this.searchQuery = '';
     this.selectedGenres = new Set();
+    this.excludedGenres = new Set();
     this.selectedYear = '';
     this.selectedQuality = '';
     this.selectedTeam = '';
@@ -28,32 +29,63 @@ class AppState {
     this.notify();
   }
 
-  toggleGenre(genre) {
-    if (!genre) {
-      this.selectedGenres.clear();
+  toggleGenreInclude(genre) {
+    const gNorm = (genre || '').trim().toLowerCase();
+    if (!gNorm) return;
+
+    this.excludedGenres.delete(gNorm);
+    if (this.selectedGenres.has(gNorm)) {
+      this.selectedGenres.delete(gNorm);
     } else {
-      const gNorm = genre.trim().toLowerCase();
-      if (this.selectedGenres.has(gNorm)) {
-        this.selectedGenres.delete(gNorm);
-      } else {
-        this.selectedGenres.add(gNorm);
-      }
+      this.selectedGenres.add(gNorm);
+    }
+    this.currentPage = 1;
+    this.notify('genre');
+  }
+
+  toggleGenreExclude(genre) {
+    const gNorm = (genre || '').trim().toLowerCase();
+    if (!gNorm) return;
+
+    this.selectedGenres.delete(gNorm);
+    if (this.excludedGenres.has(gNorm)) {
+      this.excludedGenres.delete(gNorm);
+    } else {
+      this.excludedGenres.add(gNorm);
+    }
+    this.currentPage = 1;
+    this.notify('genre');
+  }
+
+  setGenreState(genre, stateValue) {
+    const gNorm = (genre || '').trim().toLowerCase();
+    if (!gNorm) return;
+
+    this.selectedGenres.delete(gNorm);
+    this.excludedGenres.delete(gNorm);
+
+    if (stateValue === 'include') {
+      this.selectedGenres.add(gNorm);
+    } else if (stateValue === 'exclude') {
+      this.excludedGenres.add(gNorm);
     }
     this.currentPage = 1;
     this.notify('genre');
   }
 
   removeGenre(genre) {
-    const gNorm = genre.trim().toLowerCase();
-    if (this.selectedGenres.delete(gNorm)) {
+    const gNorm = (genre || '').trim().toLowerCase();
+    const removed = this.selectedGenres.delete(gNorm) || this.excludedGenres.delete(gNorm);
+    if (removed) {
       this.currentPage = 1;
       this.notify('genre');
     }
   }
 
   clearGenres() {
-    if (this.selectedGenres.size > 0) {
+    if (this.selectedGenres.size > 0 || this.excludedGenres.size > 0) {
       this.selectedGenres.clear();
+      this.excludedGenres.clear();
       this.currentPage = 1;
       this.notify('genre');
     }
@@ -91,6 +123,7 @@ class AppState {
   resetFilters() {
     this.searchQuery = '';
     this.selectedGenres.clear();
+    this.excludedGenres.clear();
     this.selectedYear = '';
     this.selectedQuality = '';
     this.selectedTeam = '';
@@ -114,6 +147,15 @@ class AppState {
         [...params.genres].some(g => !this.selectedGenres.has(g));
       if (isDiff) {
         this.selectedGenres = new Set(params.genres);
+        changed = true;
+      }
+    }
+
+    if (params.excludedGenres instanceof Set) {
+      const isDiff = this.excludedGenres.size !== params.excludedGenres.size ||
+        [...params.excludedGenres].some(g => !this.excludedGenres.has(g));
+      if (isDiff) {
+        this.excludedGenres = new Set(params.excludedGenres);
         changed = true;
       }
     }
@@ -159,6 +201,7 @@ class AppState {
   getActiveFilterCount() {
     let count = 0;
     count += this.selectedGenres.size;
+    count += this.excludedGenres.size;
     if (this.selectedYear) count++;
     if (this.selectedQuality) count++;
     if (this.selectedTeam) count++;

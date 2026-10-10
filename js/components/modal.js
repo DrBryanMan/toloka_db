@@ -65,6 +65,44 @@ export function initModal() {
       history.replaceState(null, '', targetUrl);
     }
   });
+
+  // Touch swipe-down gesture to dismiss modal on mobile
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let isSwiping = false;
+
+  modalElement.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const modalInner = modalElement.querySelector('.modal-inner');
+    if (modalInner && modalInner.scrollTop > 5) return;
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+    isSwiping = true;
+  }, { passive: true });
+
+  modalElement.addEventListener('touchmove', (e) => {
+    if (!isSwiping || e.touches.length !== 1) return;
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const diffY = currentY - touchStartY;
+    const diffX = Math.abs(currentX - touchStartX);
+
+    // If scrolling up or horizontal scroll is dominant, cancel swipe gesture
+    if (diffY < 0 || diffX > diffY) {
+      isSwiping = false;
+    }
+  }, { passive: true });
+
+  modalElement.addEventListener('touchend', (e) => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    const endY = e.changedTouches[0].clientY;
+    const diffY = endY - touchStartY;
+    // If pulled down by more than 80px, close modal
+    if (diffY > 80) {
+      modalElement.close();
+    }
+  }, { passive: true });
 }
 
 export function closeTitleModal() {

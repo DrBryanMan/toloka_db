@@ -499,12 +499,85 @@
   font-weight: 600;
 }
 
+/* Mobile Search Trigger Button (Hidden on desktop) */
+.btn-search-mobile-trigger {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   .brand-text-wrap {
     display: none;
   }
+
   .header-inner {
     height: 60px;
-    gap: 12px;
+    gap: 10px;
+    position: relative;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  /* Compact Tools Trigger (Icon Only) */
+  .header-tools-trigger {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .header-tools-trigger span,
+  .header-tools-trigger .tools-arrow {
+    display: none !important;
+  }
+
+  /* Hide normal header search container on mobile */
+  .search-container {
+    display: none !important;
+  }
+
+  /* Compact Mobile Search Trigger Button */
+  .btn-search-mobile-trigger {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+  }
+
+  .btn-search-mobile-trigger:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-bright);
+    color: var(--color-text-primary);
+  }
+
+  .btn-search-mobile-trigger:active {
+    transform: scale(0.96);
+  }
+
+  .btn-search-mobile-trigger.has-query {
+    color: var(--color-accent);
+    border-color: var(--color-border-accent);
+  }
+
+  .btn-search-mobile-trigger.has-query::after {
+    content: '';
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
   }
 }
+

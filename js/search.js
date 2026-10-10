@@ -5,6 +5,7 @@
 export function filterAndSortTitles(titles, state) {
   const query = state.searchQuery.trim().toLowerCase();
   const selectedGenres = state.selectedGenres;
+  const excludedGenres = state.excludedGenres;
   const yearFilter = state.selectedYear;
   const quality = state.selectedQuality.toLowerCase();
   const team = state.selectedTeam.toLowerCase();
@@ -25,12 +26,21 @@ export function filterAndSortTitles(titles, state) {
       }
     }
 
-    // 2. Multi-Genre Filter
-    if (selectedGenres && selectedGenres.size > 0) {
+    // 2. Multi-Genre Filter (Include & Exclude)
+    if ((selectedGenres && selectedGenres.size > 0) || (excludedGenres && excludedGenres.size > 0)) {
       const itemGenres = (item.genres || []).map(g => g.toLowerCase());
-      for (const reqGenre of selectedGenres) {
-        if (!itemGenres.includes(reqGenre)) {
-          return false;
+      if (selectedGenres && selectedGenres.size > 0) {
+        for (const reqGenre of selectedGenres) {
+          if (!itemGenres.includes(reqGenre)) {
+            return false;
+          }
+        }
+      }
+      if (excludedGenres && excludedGenres.size > 0) {
+        for (const exclGenre of excludedGenres) {
+          if (itemGenres.includes(exclGenre)) {
+            return false;
+          }
         }
       }
     }
@@ -109,24 +119,32 @@ export function filterAndSortTitles(titles, state) {
   return sortTitles(results, state.sortOrder);
 }
 
+// Cards from compilations have a synthetic id, so recency is taken from the parent topic.
+function compareByRecency(a, b) {
+  const topicA = a.parent_id ?? a.id;
+  const topicB = b.parent_id ?? b.id;
+  // Within one compilation keep the original part order.
+  return topicB - topicA || a.id - b.id;
+}
+
 function sortTitles(titles, sortOrder) {
   const sorted = [...titles];
 
   switch (sortOrder) {
     case 'year_desc':
-      return sorted.sort((a, b) => (b.year || 0) - (a.year || 0) || b.id - a.id);
+      return sorted.sort((a, b) => (b.year || 0) - (a.year || 0) || compareByRecency(a, b));
 
     case 'year_asc':
-      return sorted.sort((a, b) => (a.year || 9999) - (b.year || 9999) || b.id - a.id);
+      return sorted.sort((a, b) => (a.year || 9999) - (b.year || 9999) || compareByRecency(a, b));
 
     case 'title_asc':
       return sorted.sort((a, b) => (a.title_ua || '').localeCompare(b.title_ua || '', 'uk'));
 
     case 'episodes_desc':
-      return sorted.sort((a, b) => (b.episodes || 0) - (a.episodes || 0) || b.id - a.id);
+      return sorted.sort((a, b) => (b.episodes || 0) - (a.episodes || 0) || compareByRecency(a, b));
 
     case 'id_desc':
     default:
-      return sorted.sort((a, b) => b.id - a.id);
+      return sorted.sort(compareByRecency);
   }
 }

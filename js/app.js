@@ -124,8 +124,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Setup DOM Elements
+  const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
   const searchClearBtn = document.getElementById('search-clear-btn');
+  const btnSearchMobileTrigger = document.getElementById('btn-search-mobile-trigger');
+  const searchModal = document.getElementById('search-modal');
+  const searchModalInput = document.getElementById('search-modal-input');
+  const searchModalClear = document.getElementById('search-modal-clear');
+  const searchModalClose = document.getElementById('search-modal-close');
+  const searchModalResults = document.getElementById('search-modal-results');
+  const searchModalFooter = document.getElementById('search-modal-footer');
   const totalCountEl = document.getElementById('header-total-count');
   const catalogGrid = document.getElementById('catalog-grid');
   const catalogTableWrap = document.getElementById('catalog-table-wrap');
@@ -133,6 +141,219 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnViewTable = document.getElementById('btn-view-table');
   const paginationWrapper = document.getElementById('pagination-wrapper');
   const activeFiltersRow = document.getElementById('active-filters-row');
+  const filtersBar = document.getElementById('filters-bar');
+  const btnToggleFilters = document.getElementById('btn-toggle-filters');
+
+  // Mobile Filters Accordion Toggle with sessionStorage persistence
+  if (btnToggleFilters && filtersBar) {
+    const savedFiltersOpen = sessionStorage.getItem('toloka_mobile_filters_open') === 'true';
+    if (savedFiltersOpen) {
+      filtersBar.classList.add('filters-open');
+      btnToggleFilters.setAttribute('aria-expanded', 'true');
+    }
+
+    btnToggleFilters.addEventListener('click', () => {
+      const isOpen = filtersBar.classList.toggle('filters-open');
+      btnToggleFilters.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      sessionStorage.setItem('toloka_mobile_filters_open', isOpen ? 'true' : 'false');
+    });
+  }
+
+  // Mobile Centered Search Dialog Modal
+  function renderSearchModalResults(query) {
+    if (!searchModalResults) return;
+    const cleanQuery = (query || '').trim().toLowerCase();
+
+    if (!cleanQuery) {
+      searchModalResults.innerHTML = `
+        <div class="search-modal-empty">
+          Почніть вводити назву, режисера або команду озвучення для швидкого пошуку...
+        </div>
+      `;
+      if (searchModalFooter) {
+        searchModalFooter.innerHTML = '';
+      }
+      return;
+    }
+
+    const terms = cleanQuery.split(/\s+/).filter(Boolean);
+    const allTitles = window.TOLOKA_CATALOG?.titles || [];
+    const matched = [];
+
+    for (const item of allTitles) {
+      const corpus = `${item.title_ua || ''} ${item.title_orig || ''} ${item.raw_title || ''} ${item.director || ''} ${item.studio || ''} ${item.uploader || ''} ${(item.teams || []).join(' ')} ${item.id}`.toLowerCase();
+      let match = true;
+      for (const t of terms) {
+        if (!corpus.includes(t)) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        matched.push(item);
+      }
+    }
+
+    if (matched.length === 0) {
+      searchModalResults.innerHTML = `
+        <div class="search-modal-empty">Нічого не знайдено за запитом &laquo;${escapeHtml(query)}&raquo;</div>
+      `;
+      if (searchModalFooter) {
+        searchModalFooter.innerHTML = '';
+      }
+      return;
+    }
+
+    const limit = 30;
+    const topMatches = matched.slice(0, limit);
+
+    searchModalResults.innerHTML = topMatches.map((item) => {
+      const posterSrc = item.local_poster || item.poster || getSvgPlaceholder(item.title_ua);
+      const yearStr = item.year ? `${item.year}` : '';
+      const epsStr = item.episodes ? `${item.episodes} сер.` : '';
+      const typeStr = item.type === 'movie' ? 'Фільм' : (item.type === 'movie?' ? 'Фільм?' : (item.type === 'ova' ? 'OVA' : (item.type === 'ona' ? 'ONA' : 'Серіал')));
+
+      return `
+        <div class="search-modal-item" data-id="${item.id}" role="button" tabindex="0">
+          <img class="search-modal-thumb" src="${escapeHtml(posterSrc)}" alt="${escapeHtml(item.title_ua)}" loading="lazy">
+          <div class="search-modal-info">
+            <div class="search-modal-title-ua">${escapeHtml(item.title_ua)}</div>
+            ${item.title_orig ? `<div class="search-quick-title-orig">${escapeHtml(item.title_orig)}</div>` : ''}
+            <div class="search-modal-meta">
+              ${yearStr ? `<span class="search-modal-year">${yearStr}</span>` : ''}
+              <div class="search-modal-badges">
+                <span class="search-modal-badge">${typeStr}</span>
+                ${item.quality ? `<span class="search-modal-badge">${escapeHtml(item.quality)}</span>` : ''}
+                ${epsStr ? `<span class="search-modal-badge">${epsStr}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach click listeners to rendered items
+    searchModalResults.querySelectorAll('.search-modal-item').forEach((itemEl) => {
+      itemEl.addEventListener('click', () => {
+        const id = parseInt(itemEl.dataset.id, 10);
+        const item = allTitles.find(t => t.id === id);
+        if (item) {
+          if (searchModal && searchModal.open) searchModal.close();
+          openTitleModal(item);
+        }
+      });
+    });
+
+    if (searchModalFooter) {
+      const total = matched.length;
+      searchModalFooter.innerHTML = `
+        <span>Знайдено: <strong class="search-modal-footer-count">${formatNumber(total)}</strong> ${total === 1 ? 'тайтл' : 'тайтлів'}</span>
+        <button type="button" class="btn-search-goto-catalog" id="btn-search-modal-apply">Застосувати до каталогу &rarr;</button>
+      `;
+
+      const applyBtn = searchModalFooter.querySelector('#btn-search-modal-apply');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+          if (searchModal && searchModal.open) searchModal.close();
+          navigateTo(VIEWS.CATALOG);
+          state.setSearchQuery(query);
+          if (searchInput) searchInput.value = query;
+          if (searchClearBtn) searchClearBtn.classList.toggle('visible', Boolean(query));
+        });
+      }
+    }
+  }
+
+  const debouncedSearchModal = debounce((q) => {
+    renderSearchModalResults(q);
+    if (getActiveView() === VIEWS.CATALOG) {
+      state.setSearchQuery(q);
+      if (searchInput) {
+        searchInput.value = q;
+        if (searchClearBtn) searchClearBtn.classList.toggle('visible', Boolean(q));
+      }
+    }
+  }, 120);
+
+  if (btnSearchMobileTrigger && searchModal) {
+    btnSearchMobileTrigger.addEventListener('click', () => {
+      searchModal.showModal();
+      const currentQuery = state.searchQuery || (searchInput ? searchInput.value : '') || '';
+      if (searchModalInput) {
+        searchModalInput.value = currentQuery;
+        if (searchModalClear) searchModalClear.classList.toggle('visible', Boolean(currentQuery));
+        setTimeout(() => searchModalInput.focus(), 60);
+      }
+      renderSearchModalResults(currentQuery);
+    });
+  }
+
+  if (searchModalInput) {
+    searchModalInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (searchModalClear) searchModalClear.classList.toggle('visible', val.length > 0);
+      debouncedSearchModal(val);
+    });
+  }
+
+  if (searchModalClear) {
+    searchModalClear.addEventListener('click', () => {
+      if (searchModalInput) {
+        searchModalInput.value = '';
+        searchModalClear.classList.remove('visible');
+        searchModalInput.focus();
+      }
+      renderSearchModalResults('');
+      if (getActiveView() === VIEWS.CATALOG) {
+        state.setSearchQuery('');
+        if (searchInput) {
+          searchInput.value = '';
+          if (searchClearBtn) searchClearBtn.classList.remove('visible');
+        }
+      }
+    });
+  }
+
+  if (searchModalClose && searchModal) {
+    searchModalClose.addEventListener('click', () => {
+      searchModal.close();
+    });
+  }
+
+  if (searchModal) {
+    searchModal.addEventListener('click', (e) => {
+      if (e.target === searchModal) {
+        searchModal.close();
+      }
+    });
+  }
+
+  // Prevent background page scrolling when any modal dialog is open
+  function setupModalScrollLock() {
+    const checkDialogs = () => {
+      const anyOpen = Array.from(document.querySelectorAll('dialog')).some(d => d.open);
+      document.documentElement.classList.toggle('modal-open', anyOpen);
+      document.body.classList.toggle('modal-open', anyOpen);
+    };
+
+    document.querySelectorAll('dialog').forEach(dlg => {
+      dlg.addEventListener('close', checkDialogs);
+      dlg.addEventListener('cancel', checkDialogs);
+    });
+
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.attributeName === 'open') {
+          checkDialogs();
+        }
+      }
+    });
+
+    document.querySelectorAll('dialog').forEach(dlg => {
+      observer.observe(dlg, { attributes: true, attributeFilter: ['open'] });
+    });
+  }
+  setupModalScrollLock();
 
   // View Mode: grid vs table
   let currentViewMode = localStorage.getItem('toloka_catalog_view_mode') || 'grid';
@@ -177,14 +398,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnViewTable.setAttribute('aria-pressed', currentViewMode === 'table' ? 'true' : 'false');
   }
 
-  // Populate Custom Selectors & Multi-Genre Pills
+  // Populate Custom Selectors & Genre Dropdown Filter
   setupCustomSelects(window.TOLOKA_CATALOG.facets);
-  setupGenrePills(window.TOLOKA_CATALOG.facets);
+  setupGenreSelect(window.TOLOKA_CATALOG.facets);
 
   function syncControlsFromState(appState) {
     if (searchInput) {
       searchInput.value = appState.searchQuery || '';
       searchClearBtn.classList.toggle('visible', Boolean(appState.searchQuery));
+    }
+    if (btnSearchMobileTrigger) {
+      btnSearchMobileTrigger.classList.toggle('has-query', Boolean(appState.searchQuery));
+    }
+    if (searchModalInput && document.activeElement !== searchModalInput) {
+      searchModalInput.value = appState.searchQuery || '';
+      if (searchModalClear) {
+        searchModalClear.classList.toggle('visible', Boolean(appState.searchQuery));
+      }
     }
     if (customSelects['custom-select-year']) {
       customSelects['custom-select-year'].setValue(appState.selectedYear || '');
@@ -204,7 +434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (customSelects['custom-select-sort']) {
       customSelects['custom-select-sort'].setValue(appState.sortOrder || 'id_desc');
     }
-    syncGenrePills();
+    syncGenreSelect();
   }
 
   // Restore initial parameters from URL
@@ -219,10 +449,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Escape key closes open dropdown
+  // Escape key closes open dropdown or mobile search
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeAllCustomSelects();
+      if (searchContainer) searchContainer.classList.remove('mobile-active');
     }
   });
 
@@ -735,61 +966,168 @@ function closeAllCustomSelects() {
 }
 
 /**
- * Multi-Select Genre Pills Bar (Wrapped flex without horizontal scroll)
+ * Multi-Select Genre Dropdown Component with Include & Exclude capabilities
  */
-function setupGenrePills(facets) {
-  const container = document.getElementById('genre-pills');
+let genreOptionsCache = [];
+
+function setupGenreSelect(facets) {
+  const container = document.getElementById('custom-select-genres');
   if (!container) return;
 
-  const topGenres = (facets.genres || []).slice(0, 30);
+  const trigger = container.querySelector('.custom-select-trigger');
+  const valueSpan = container.querySelector('.custom-select-value');
+  const optionsContainer = document.getElementById('options-genres');
+  const searchInput = document.getElementById('genre-search-filter');
+  const resetBtn = document.getElementById('btn-genre-reset-all');
 
-  let html = `
-    <button type="button" class="genre-pill active" data-genre="" id="genre-pill-all">
-      Всі жанри
-    </button>
-  `;
+  genreOptionsCache = facets.genres || [];
 
-  for (const g of topGenres) {
-    html += `
-      <button type="button" class="genre-pill" data-genre="${escapeHtml(g.name)}">
-        <svg class="pill-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        <span>${escapeHtml(g.name)}</span>
-      </button>
-    `;
+  function renderGenreItems() {
+    if (!optionsContainer) return;
+    let html = '';
+    for (const g of genreOptionsCache) {
+      const gLower = g.name.trim().toLowerCase();
+      const isInc = state.selectedGenres.has(gLower);
+      const isExcl = state.excludedGenres.has(gLower);
+      const statusClass = isInc ? 'is-included' : (isExcl ? 'is-excluded' : '');
+
+      html += `
+        <div class="genre-select-row ${statusClass}" data-genre="${escapeHtml(g.name)}" role="option">
+          <div class="genre-row-main">
+            <span class="genre-row-name" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>
+            <span class="genre-row-count">${g.count}</span>
+          </div>
+          <div class="genre-row-actions">
+            <button type="button" class="btn-genre-action btn-genre-include" data-action="include" title="Включити (+) ${escapeHtml(g.name)}" aria-label="Включити ${escapeHtml(g.name)}">
+              +
+            </button>
+            <button type="button" class="btn-genre-action btn-genre-exclude" data-action="exclude" title="Виключити (−) ${escapeHtml(g.name)}" aria-label="Виключити ${escapeHtml(g.name)}">
+              −
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    optionsContainer.innerHTML = html;
   }
 
-  container.innerHTML = html;
+  renderGenreItems();
+  updateGenreTriggerText();
 
-  container.addEventListener('click', (e) => {
-    const pill = e.target.closest('.genre-pill');
-    if (!pill) return;
-
-    const genre = pill.dataset.genre;
-    if (!genre) {
-      state.clearGenres();
-    } else {
-      state.toggleGenre(genre);
+  // Toggle trigger open/close
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = container.classList.contains('open');
+    closeAllCustomSelects();
+    if (!isOpen) {
+      container.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+      if (searchInput) {
+        searchInput.value = '';
+        filterGenreRows('');
+        setTimeout(() => searchInput.focus(), 60);
+      }
     }
-    syncGenrePills();
   });
+
+  // Filter input typing
+  function filterGenreRows(query) {
+    if (!optionsContainer) return;
+    const clean = (query || '').trim().toLowerCase();
+    optionsContainer.querySelectorAll('.genre-select-row').forEach(row => {
+      const name = (row.dataset.genre || '').toLowerCase();
+      row.style.display = (!clean || name.includes(clean)) ? '' : 'none';
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      filterGenreRows(e.target.value);
+    });
+    searchInput.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  // Row & action buttons clicking
+  optionsContainer.addEventListener('click', (e) => {
+    const actionBtn = e.target.closest('.btn-genre-action');
+    const row = e.target.closest('.genre-select-row');
+    if (!row) return;
+
+    const genre = row.dataset.genre;
+    if (!genre) return;
+
+    if (actionBtn) {
+      e.stopPropagation();
+      const action = actionBtn.dataset.action;
+      if (action === 'include') {
+        state.toggleGenreInclude(genre);
+      } else if (action === 'exclude') {
+        state.toggleGenreExclude(genre);
+      }
+    } else {
+      state.toggleGenreInclude(genre);
+    }
+
+    syncGenreSelect();
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.clearGenres();
+      syncGenreSelect();
+    });
+  }
+
+  customSelects['custom-select-genres'] = {
+    reset: () => {
+      state.clearGenres();
+      syncGenreSelect();
+    },
+    setValue: () => {
+      syncGenreSelect();
+    }
+  };
 }
 
-function syncGenrePills() {
-  const pills = document.querySelectorAll('.genre-pill');
-  const allPill = document.getElementById('genre-pill-all');
-  const hasSelected = state.selectedGenres.size > 0;
+function updateGenreTriggerText() {
+  const container = document.getElementById('custom-select-genres');
+  if (!container) return;
+  const valueSpan = container.querySelector('.custom-select-value');
+  if (!valueSpan) return;
 
-  if (allPill) {
-    allPill.classList.toggle('active', !hasSelected);
+  const incCount = state.selectedGenres.size;
+  const exclCount = state.excludedGenres.size;
+
+  if (incCount === 0 && exclCount === 0) {
+    valueSpan.textContent = 'Всі жанри';
+  } else {
+    let badges = '<span class="genre-trigger-badges">';
+    if (incCount > 0) {
+      badges += `<span class="genre-badge-inc">+${incCount}</span>`;
+    }
+    if (exclCount > 0) {
+      badges += `<span class="genre-badge-excl">−${exclCount}</span>`;
+    }
+    badges += '</span>';
+    valueSpan.innerHTML = badges + '<span class="genre-trigger-text">Жанри</span>';
   }
+}
 
-  pills.forEach(pill => {
-    const g = (pill.dataset.genre || '').trim().toLowerCase();
-    if (!g) return;
-    pill.classList.toggle('active', state.selectedGenres.has(g));
-  });
+function syncGenreSelect() {
+  const optionsContainer = document.getElementById('options-genres');
+  if (optionsContainer) {
+    optionsContainer.querySelectorAll('.genre-select-row').forEach(row => {
+      const gLower = (row.dataset.genre || '').trim().toLowerCase();
+      const isInc = state.selectedGenres.has(gLower);
+      const isExcl = state.excludedGenres.has(gLower);
+      row.classList.toggle('is-included', isInc);
+      row.classList.toggle('is-excluded', isExcl);
+    });
+  }
+  updateGenreTriggerText();
 }
 
 /**
@@ -839,15 +1177,32 @@ function renderGrid(container, appState) {
 function updateActiveFilters(container, appState) {
   const activeChips = [];
 
-  // 1. Genres chip: summarized as total count
+  // 1. Included Genres chips
   if (appState.selectedGenres.size > 0) {
-    activeChips.push({
-      label: `Жанри (${appState.selectedGenres.size})`,
-      clear: () => {
-        appState.clearGenres();
-        syncGenrePills();
-      }
-    });
+    for (const g of appState.selectedGenres) {
+      activeChips.push({
+        type: 'positive',
+        label: `+ ${g}`,
+        clear: () => {
+          appState.removeGenre(g);
+          syncGenreSelect();
+        }
+      });
+    }
+  }
+
+  // 1b. Excluded Genres chips
+  if (appState.excludedGenres.size > 0) {
+    for (const g of appState.excludedGenres) {
+      activeChips.push({
+        type: 'negative',
+        label: `− ${g}`,
+        clear: () => {
+          appState.removeGenre(g);
+          syncGenreSelect();
+        }
+      });
+    }
   }
 
   // 2. Year chip
@@ -913,6 +1268,26 @@ function updateActiveFilters(container, appState) {
     });
   }
 
+  // Update mobile filter active counter badge
+  const filterActiveBadge = document.getElementById('filter-active-count');
+  if (filterActiveBadge) {
+    let totalFilterCount = 0;
+    if (appState.selectedGenres.size > 0) totalFilterCount += appState.selectedGenres.size;
+    if (appState.excludedGenres.size > 0) totalFilterCount += appState.excludedGenres.size;
+    if (appState.selectedYear) totalFilterCount++;
+    if (appState.selectedQuality) totalFilterCount++;
+    if (appState.selectedTeam) totalFilterCount++;
+    if (appState.selectedType) totalFilterCount++;
+    if (appState.selectedSub) totalFilterCount++;
+
+    if (totalFilterCount > 0) {
+      filterActiveBadge.textContent = totalFilterCount;
+      filterActiveBadge.hidden = false;
+    } else {
+      filterActiveBadge.hidden = true;
+    }
+  }
+
   if (activeChips.length === 0) {
     container.innerHTML = '';
     return;
@@ -920,8 +1295,9 @@ function updateActiveFilters(container, appState) {
 
   let html = `<span class="active-filters-label">Активні фільтри:</span>`;
   activeChips.forEach((chip, idx) => {
+    const chipClass = chip.type === 'negative' ? 'active-filter-chip chip-negative' : 'active-filter-chip';
     html += `
-      <span class="active-filter-chip">
+      <span class="${chipClass}">
         ${escapeHtml(chip.label)}
         <button data-chip-idx="${idx}" aria-label="Видалити фільтр">✕</button>
       </span>
@@ -948,12 +1324,18 @@ function updateActiveFilters(container, appState) {
 function resetAllFilters() {
   document.getElementById('search-input').value = '';
   document.getElementById('search-clear-btn').classList.remove('visible');
+  const btnSearchMobileTrigger = document.getElementById('btn-search-mobile-trigger');
+  if (btnSearchMobileTrigger) btnSearchMobileTrigger.classList.remove('has-query');
+  const searchModalInput = document.getElementById('search-modal-input');
+  if (searchModalInput) searchModalInput.value = '';
+  const searchModalClear = document.getElementById('search-modal-clear');
+  if (searchModalClear) searchModalClear.classList.remove('visible');
   
   for (const selId in customSelects) {
     customSelects[selId].reset();
   }
 
-  syncGenrePills();
+  syncGenreSelect();
   state.resetFilters();
 }
 window.resetAllCatalogFilters = resetAllFilters;

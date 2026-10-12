@@ -398,9 +398,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnViewTable.setAttribute('aria-pressed', currentViewMode === 'table' ? 'true' : 'false');
   }
 
-  // Populate Custom Selectors & Genre Dropdown Filter
+  // Populate Custom Selectors, Year Select, Genre Select & Sort Control
   setupCustomSelects(window.TOLOKA_CATALOG.facets);
+  setupYearSelect(window.TOLOKA_CATALOG.facets);
   setupGenreSelect(window.TOLOKA_CATALOG.facets);
+  setupSortControl();
 
   function syncControlsFromState(appState) {
     if (searchInput) {
@@ -800,23 +802,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Creates and initializes custom dropdown components
  */
 function setupCustomSelects(facets) {
-  // 1. Year Select
-  const yearOptions = [
-    { value: '', label: 'Усі роки' },
-    { value: '2020s', label: '2020-ті роки' },
-    { value: '2010s', label: '2010-ті роки' },
-    { value: '2000s', label: '2000-ні роки' },
-    { value: '1990s', label: '1990-ті роки' },
-    { value: 'older', label: 'До 1990 року' },
-  ];
-  for (const y of facets.years || []) {
-    yearOptions.push({ value: String(y), label: `${y} рік` });
-  }
-  createCustomSelect('custom-select-year', yearOptions, 'selectedYear', (val) => {
-    state.setFilter('selectedYear', val);
-  });
-
-  // 2. Quality Select
+  // 1. Quality Select
   const qualityOptions = [{ value: '', label: 'Будь-яка якість' }];
   for (const q of facets.qualities || []) {
     qualityOptions.push({ value: q.name, label: q.name, count: q.count });
@@ -856,18 +842,6 @@ function setupCustomSelects(facets) {
   ];
   createCustomSelect('custom-select-sub', subOptions, 'selectedSub', (val) => {
     state.setFilter('selectedSub', val);
-  });
-
-  // 6. Sort Select
-  const sortOptions = [
-    { value: 'id_desc', label: 'Найновіші спочатку' },
-    { value: 'year_desc', label: 'Рік: новіші спочатку' },
-    { value: 'year_asc', label: 'Рік: старіші спочатку' },
-    { value: 'title_asc', label: 'Назва: А–Я' },
-    { value: 'episodes_desc', label: 'Кількість серій' },
-  ];
-  createCustomSelect('custom-select-sort', sortOptions, 'sortOrder', (val) => {
-    state.setSortOrder(val);
   });
 }
 
@@ -963,6 +937,314 @@ function closeAllCustomSelects() {
     const trigger = sel.querySelector('.custom-select-trigger');
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
   });
+  const sortWrapper = document.getElementById('sort-control-wrapper');
+  if (sortWrapper) sortWrapper.classList.remove('open');
+}
+
+/**
+ * Dedicated Year Selector with Manual Year Input and Decades
+ */
+function setupYearSelect(facets) {
+  const container = document.getElementById('custom-select-year');
+  if (!container) return;
+
+  const trigger = container.querySelector('.custom-select-trigger');
+  const valueSpan = container.querySelector('.custom-select-value');
+  const optionsContainer = document.getElementById('options-year');
+  const manualInput = document.getElementById('year-manual-input');
+  const manualClear = document.getElementById('year-manual-clear');
+  const applyBtn = document.getElementById('btn-year-apply');
+
+  const decadeOptions = [
+    { value: '', label: 'Усі роки' },
+    { value: '2020s', label: '2020-ті роки' },
+    { value: '2010s', label: '2010-ті роки' },
+    { value: '2000s', label: '2000-ні роки' },
+    { value: '1990s', label: '1990-ті роки' },
+    { value: 'older', label: 'До 1990 року' },
+  ];
+
+  // Render decade options
+  if (optionsContainer) {
+    optionsContainer.innerHTML = decadeOptions.map(opt => `
+      <div 
+        class="custom-select-option ${opt.value === '' ? 'active' : ''}" 
+        data-value="${escapeHtml(opt.value)}"
+        role="option"
+        aria-selected="${opt.value === ''}"
+      >
+        <span>${escapeHtml(opt.label)}</span>
+      </div>
+    `).join('');
+  }
+
+  function updateYearUI(val) {
+    const currentVal = (val || '').trim();
+    const matchedDecade = decadeOptions.find(o => o.value === currentVal);
+
+    if (matchedDecade) {
+      if (manualInput) manualInput.value = '';
+      if (manualClear) manualClear.hidden = true;
+      if (valueSpan) valueSpan.textContent = matchedDecade.label;
+      if (optionsContainer) {
+        optionsContainer.querySelectorAll('.custom-select-option').forEach(el => {
+          const isCur = el.dataset.value === currentVal;
+          el.classList.toggle('active', isCur);
+          el.setAttribute('aria-selected', isCur ? 'true' : 'false');
+        });
+      }
+    } else if (currentVal) {
+      if (manualInput) manualInput.value = currentVal;
+      if (manualClear) manualClear.hidden = false;
+      if (valueSpan) valueSpan.textContent = `${currentVal} рік`;
+      if (optionsContainer) {
+        optionsContainer.querySelectorAll('.custom-select-option').forEach(el => {
+          el.classList.remove('active');
+          el.setAttribute('aria-selected', 'false');
+        });
+      }
+    } else {
+      if (manualInput) manualInput.value = '';
+      if (manualClear) manualClear.hidden = true;
+      if (valueSpan) valueSpan.textContent = 'Усі роки';
+      if (optionsContainer) {
+        optionsContainer.querySelectorAll('.custom-select-option').forEach(el => {
+          const isDefault = el.dataset.value === '';
+          el.classList.toggle('active', isDefault);
+          el.setAttribute('aria-selected', isDefault ? 'true' : 'false');
+        });
+      }
+    }
+  }
+
+  function applyYearValue(val, closeDropdown = false) {
+    const clean = (val || '').trim();
+    if (!clean) {
+      state.setFilter('selectedYear', '');
+      updateYearUI('');
+    } else {
+      const num = parseInt(clean, 10);
+      if (!isNaN(num) && num >= 1950 && num <= 2035) {
+        state.setFilter('selectedYear', String(num));
+        updateYearUI(String(num));
+      }
+    }
+    if (closeDropdown) {
+      container.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  // Toggle dropdown
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = container.classList.contains('open');
+    closeAllCustomSelects();
+    if (!isOpen) {
+      container.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+      if (manualInput) {
+        setTimeout(() => manualInput.focus(), 60);
+      }
+    }
+  });
+
+  // Decade selection click
+  if (optionsContainer) {
+    optionsContainer.addEventListener('click', (e) => {
+      const optEl = e.target.closest('.custom-select-option');
+      if (!optEl) return;
+      const val = optEl.dataset.value;
+      updateYearUI(val);
+      container.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+      state.setFilter('selectedYear', val);
+    });
+  }
+
+  // Manual input events
+  if (manualInput) {
+    manualInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (manualClear) manualClear.hidden = !val;
+      const num = parseInt(val, 10);
+      if (val.length === 4 && !isNaN(num) && num >= 1950 && num <= 2035) {
+        applyYearValue(val, false);
+      }
+    });
+
+    manualInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyYearValue(manualInput.value, true);
+      }
+    });
+  }
+
+  if (manualClear) {
+    manualClear.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (manualInput) manualInput.value = '';
+      manualClear.hidden = true;
+      applyYearValue('', false);
+      if (manualInput) manualInput.focus();
+    });
+  }
+
+  if (applyBtn) {
+    applyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      applyYearValue(manualInput ? manualInput.value : '', true);
+    });
+  }
+
+  customSelects['custom-select-year'] = {
+    reset: () => {
+      updateYearUI('');
+    },
+    setValue: (val) => {
+      updateYearUI(val || '');
+    }
+  };
+}
+
+/**
+ * Dedicated Sort Control with Field Selection & Direction Toggle Button
+ */
+function setupSortControl() {
+  const container = document.getElementById('custom-select-sort');
+  const btnDirection = document.getElementById('btn-sort-direction');
+  const wrapper = document.getElementById('sort-control-wrapper');
+  if (!container) return;
+
+  const trigger = container.querySelector('.custom-select-trigger');
+  const valueSpan = container.querySelector('.custom-select-value');
+  const optionsContainer = document.getElementById('options-sort');
+
+  const sortFields = [
+    { value: 'id', label: 'За датою додавання' },
+    { value: 'year', label: 'Рік виходу' },
+    { value: 'title', label: 'Назва' },
+    { value: 'episodes', label: 'Кількість серій' },
+  ];
+
+  let currentField = 'id';
+  let currentDirection = 'desc';
+
+  function parseSortString(str) {
+    const parts = (str || 'id_desc').split('_');
+    const field = ['id', 'year', 'title', 'episodes'].includes(parts[0]) ? parts[0] : 'id';
+    const dir = parts[1] === 'asc' ? 'asc' : 'desc';
+    return { field, dir };
+  }
+
+  function renderOptions() {
+    if (!optionsContainer) return;
+    optionsContainer.innerHTML = sortFields.map(opt => `
+      <div 
+        class="custom-select-option ${opt.value === currentField ? 'active' : ''}" 
+        data-value="${escapeHtml(opt.value)}"
+        role="option"
+        aria-selected="${opt.value === currentField}"
+      >
+        <span>${escapeHtml(opt.label)}</span>
+      </div>
+    `).join('');
+  }
+
+  function getDirectionTooltip(field, dir) {
+    if (field === 'title') {
+      return dir === 'asc' 
+        ? 'А → Я (натисніть для Я → А)' 
+        : 'Я → А (натисніть для А → Я)';
+    }
+    return dir === 'desc' 
+      ? 'За спаданням (натисніть для зростання)' 
+      : 'За зростанням (натисніть для спадання)';
+  }
+
+  function updateSortUI(field, dir) {
+    currentField = field;
+    currentDirection = dir;
+
+    const matched = sortFields.find(f => f.value === field) || sortFields[0];
+    if (valueSpan) valueSpan.textContent = matched.label;
+
+    if (optionsContainer) {
+      optionsContainer.querySelectorAll('.custom-select-option').forEach(el => {
+        const isCur = el.dataset.value === field;
+        el.classList.toggle('active', isCur);
+        el.setAttribute('aria-selected', isCur ? 'true' : 'false');
+      });
+    }
+
+    if (btnDirection) {
+      const isAsc = (dir === 'asc');
+      btnDirection.classList.toggle('is-asc', isAsc);
+      const tip = getDirectionTooltip(field, dir);
+      btnDirection.setAttribute('title', tip);
+      btnDirection.setAttribute('aria-label', tip);
+      btnDirection.setAttribute('aria-pressed', isAsc ? 'true' : 'false');
+    }
+  }
+
+  // Populate options
+  renderOptions();
+
+  // Toggle dropdown
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = container.classList.contains('open');
+    closeAllCustomSelects();
+    if (!isOpen) {
+      container.classList.add('open');
+      if (wrapper) wrapper.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  // Select option click
+  if (optionsContainer) {
+    optionsContainer.addEventListener('click', (e) => {
+      const optEl = e.target.closest('.custom-select-option');
+      if (!optEl) return;
+      const newField = optEl.dataset.value;
+      container.classList.remove('open');
+      if (wrapper) wrapper.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+
+      // If switching to title, default to 'asc' unless already specified
+      let newDir = currentDirection;
+      if (newField === 'title' && currentField !== 'title') {
+        newDir = 'asc';
+      } else if (newField !== 'title' && currentField === 'title' && newDir === 'asc') {
+        newDir = 'desc';
+      }
+
+      updateSortUI(newField, newDir);
+      state.setSortOrder(`${newField}_${newDir}`);
+    });
+  }
+
+  // Toggle Direction button click
+  if (btnDirection) {
+    btnDirection.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newDir = (currentDirection === 'desc') ? 'asc' : 'desc';
+      updateSortUI(currentField, newDir);
+      state.setSortOrder(`${currentField}_${newDir}`);
+    });
+  }
+
+  customSelects['custom-select-sort'] = {
+    reset: () => {
+      updateSortUI('id', 'desc');
+    },
+    setValue: (val) => {
+      const parsed = parseSortString(val);
+      updateSortUI(parsed.field, parsed.dir);
+    }
+  };
 }
 
 /**
@@ -1207,8 +1489,16 @@ function updateActiveFilters(container, appState) {
 
   // 2. Year chip
   if (appState.selectedYear) {
+    const yearLabels = {
+      '2020s': '2020-ті роки',
+      '2010s': '2010-ті роки',
+      '2000s': '2000-ні роки',
+      '1990s': '1990-ті роки',
+      'older': 'До 1990 року'
+    };
+    const displayYear = yearLabels[appState.selectedYear] || `${appState.selectedYear} р.`;
     activeChips.push({
-      label: `Рік: ${appState.selectedYear}`,
+      label: `Рік: ${displayYear}`,
       clear: () => {
         appState.setFilter('selectedYear', '');
         if (customSelects['custom-select-year']) customSelects['custom-select-year'].setValue('');

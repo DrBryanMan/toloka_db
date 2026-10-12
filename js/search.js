@@ -140,8 +140,21 @@ function sortTitles(titles, sortOrder) {
     case 'title_asc':
       return sorted.sort((a, b) => (a.title_ua || '').localeCompare(b.title_ua || '', 'uk'));
 
+    case 'title_desc':
+      return sorted.sort((a, b) => (b.title_ua || '').localeCompare(a.title_ua || '', 'uk'));
+
     case 'episodes_desc':
       return sorted.sort((a, b) => (b.episodes || 0) - (a.episodes || 0) || compareByRecency(a, b));
+
+    case 'episodes_asc':
+      return sorted.sort((a, b) => (a.episodes || 0) - (b.episodes || 0) || compareByRecency(a, b));
+
+    case 'id_asc':
+      return sorted.sort((a, b) => {
+        const topicA = a.parent_id ?? a.id;
+        const topicB = b.parent_id ?? b.id;
+        return topicA - topicB || a.id - b.id;
+      });
 
     case 'id_desc':
     default:

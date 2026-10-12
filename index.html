@@ -299,34 +299,51 @@
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Year Custom Select (between filters and sort) -->
-          <div class="filter-select-group filter-year-group">
-            <span class="filter-label" id="label-year">Рік виходу</span>
-            <div class="custom-select" id="custom-select-year" data-name="year">
-              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-year">
-                <span class="custom-select-value">Усі роки</span>
-                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="custom-select-dropdown" role="listbox">
-                <div class="custom-select-options" id="options-year"></div>
+            <!-- Year Custom Select (Manual Input & Decades) -->
+            <div class="filter-select-group filter-year-group">
+              <span class="filter-label" id="label-year">Рік виходу</span>
+              <div class="custom-select year-select" id="custom-select-year" data-name="year">
+                <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-year">
+                  <span class="custom-select-value">Усі роки</span>
+                  <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="custom-select-dropdown year-select-dropdown" role="listbox">
+                  <div class="year-dropdown-header">
+                    <div class="year-input-wrapper">
+                      <input type="number" id="year-manual-input" class="year-manual-input" placeholder="Введіть рік..." min="1950" max="2035" autocomplete="off">
+                      <button type="button" id="year-manual-clear" class="year-manual-clear" aria-label="Очистити рік" hidden>✕</button>
+                    </div>
+                    <button type="button" class="btn-year-apply" id="btn-year-apply" title="Застосувати рік">OK</button>
+                  </div>
+                  <div class="custom-select-options" id="options-year"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Sort Custom Select -->
+        <!-- Sort Custom Select & Direction Toggle -->
         <div class="filter-select-group filter-sort-group">
           <span class="filter-label" id="label-sort">Сортування</span>
-          <div class="custom-select" id="custom-select-sort" data-name="sort">
-            <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sort">
-              <span class="custom-select-value">Найновіші спочатку</span>
-              <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="custom-select-dropdown" role="listbox">
-              <div class="custom-select-options" id="options-sort"></div>
+          <div class="sort-control-wrapper" id="sort-control-wrapper">
+            <div class="custom-select sort-select" id="custom-select-sort" data-name="sort">
+              <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="label-sort">
+                <span class="custom-select-value">За датою додавання</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="custom-select-dropdown" role="listbox">
+                <div class="custom-select-options" id="options-sort"></div>
+              </div>
             </div>
+            <div class="sort-divider"></div>
+            <button type="button" class="btn-sort-direction" id="btn-sort-direction" title="За спаданням (натисніть для зміни)" aria-label="Змінити напрямок сортування">
+              <svg class="sort-direction-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="12" x2="14" y2="12"></line>
+                <line x1="4" y1="18" x2="8" y2="18"></line>
+              </svg>
+            </button>
           </div>
         </div>
 

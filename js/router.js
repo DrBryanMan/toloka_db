@@ -4,6 +4,7 @@
  */
 
 export const VIEWS = {
+  HOME: 'home',
   CATALOG: 'catalog',
   PARSER: 'parser',
   VOC_SYNC: 'voc-sync',
@@ -18,7 +19,9 @@ const listeners = [];
  * Extracts active view identifier from window.location (hash or search param)
  */
 export function getActiveView() {
-  const hash = window.location.hash.toLowerCase().replace(/^#\/?/, '');
+  const hash = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
+  if (hash === 'catalog' || hash === 'tools/catalog') return VIEWS.CATALOG;
+  if (hash === 'home') return VIEWS.HOME;
   if (hash === 'parser' || hash === 'tools/parser') return VIEWS.PARSER;
   if (hash === 'voc-sync' || hash === 'tools/voc-sync') return VIEWS.VOC_SYNC;
   if (hash === 'ext-sync' || hash === 'tools/ext-sync' || hash === 'db-sync') return VIEWS.EXT_SYNC;
@@ -27,20 +30,40 @@ export function getActiveView() {
 
   const params = new URLSearchParams(window.location.search);
   const viewParam = params.get('view')?.toLowerCase();
+  if (viewParam === 'catalog') return VIEWS.CATALOG;
+  if (viewParam === 'home') return VIEWS.HOME;
   if (viewParam === 'parser') return VIEWS.PARSER;
   if (viewParam === 'voc-sync') return VIEWS.VOC_SYNC;
   if (viewParam === 'ext-sync' || viewParam === 'db-sync') return VIEWS.EXT_SYNC;
   if (viewParam === 'posters') return VIEWS.POSTERS;
   if (viewParam === 'incomplete') return VIEWS.INCOMPLETE;
 
-  return VIEWS.CATALOG;
+  if (params.has('search') || params.has('q') || params.has('genres') || params.has('genre') ||
+      params.has('id') || params.has('title') || params.has('page') || params.has('year') ||
+      params.has('quality') || params.has('team') || params.has('type') || params.has('sub') || params.has('sort')) {
+    return VIEWS.CATALOG;
+  }
+
+  return VIEWS.HOME;
 }
 
 /**
  * Programmatically changes view and updates URL hash
  */
 export function navigateTo(view) {
-  if (view === VIEWS.PARSER) {
+  if (view === VIEWS.HOME) {
+    if (window.location.hash !== '#home') {
+      window.location.hash = '#home';
+    } else {
+      renderRoute(VIEWS.HOME);
+    }
+  } else if (view === VIEWS.CATALOG) {
+    if (window.location.hash !== '#catalog') {
+      window.location.hash = '#catalog';
+    } else {
+      renderRoute(VIEWS.CATALOG);
+    }
+  } else if (view === VIEWS.PARSER) {
     if (window.location.hash !== '#parser') {
       window.location.hash = '#parser';
     } else {
@@ -71,11 +94,11 @@ export function navigateTo(view) {
       renderRoute(VIEWS.INCOMPLETE);
     }
   } else {
-    if (window.location.hash) {
-      const targetUrl = window.location.pathname + window.location.search;
-      history.pushState(null, '', targetUrl);
+    if (window.location.hash !== '#catalog') {
+      window.location.hash = '#catalog';
+    } else {
+      renderRoute(VIEWS.CATALOG);
     }
-    renderRoute(VIEWS.CATALOG);
   }
 }
 
@@ -214,8 +237,9 @@ export function syncUrlWithCatalogState(appState, replace = false) {
   if (getActiveView() !== VIEWS.CATALOG) return;
 
   const queryString = buildCatalogQueryString(appState);
-  const targetUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
-  const currentFullUrl = window.location.pathname + window.location.search;
+  const hashPart = window.location.hash ? window.location.hash.split('?')[0] : '#catalog';
+  const targetUrl = queryString ? `${window.location.pathname}?${queryString}${hashPart}` : `${window.location.pathname}${hashPart}`;
+  const currentFullUrl = window.location.pathname + window.location.search + window.location.hash;
 
   if (targetUrl !== currentFullUrl) {
     if (replace) {
@@ -237,6 +261,7 @@ export function onRouteChanged(fn) {
  * Switches DOM view containers and notifies subscribers
  */
 function renderRoute(view) {
+  const homeView = document.getElementById('home-view');
   const catalogView = document.getElementById('catalog-view');
   const parserView = document.getElementById('parser-view');
   const vocSyncView = document.getElementById('voc-sync-view');
@@ -245,6 +270,7 @@ function renderRoute(view) {
   const incompleteView = document.getElementById('incomplete-view');
   const toolsDropdown = document.getElementById('header-tools-dropdown');
 
+  if (homeView) homeView.hidden = (view !== VIEWS.HOME);
   if (catalogView) catalogView.hidden = (view !== VIEWS.CATALOG);
   if (parserView) parserView.hidden = (view !== VIEWS.PARSER);
   if (vocSyncView) vocSyncView.hidden = (view !== VIEWS.VOC_SYNC);

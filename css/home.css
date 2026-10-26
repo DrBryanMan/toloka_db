@@ -1,0 +1,216 @@
+/* Home Page View */
+
+.home-hero {
+  padding: 64px 0 44px;
+  text-align: center;
+}
+
+.home-hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.home-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: var(--color-text-primary);
+  line-height: 1.15;
+  margin: 0;
+}
+
+.home-subtitle {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  margin: 0;
+  max-width: 460px;
+}
+
+.home-cta-btn {
+  margin-top: 10px;
+  height: 44px;
+  padding: 0 28px;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Stats Section */
+.home-stats-section {
+  padding-bottom: 56px;
+}
+
+.home-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+
+.home-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* Stat Cards */
+.home-stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  backdrop-filter: var(--blur-base);
+  -webkit-backdrop-filter: var(--blur-base);
+}
+
+.home-stat-card:hover {
+  border-color: var(--color-border-bright);
+  background: var(--color-surface-hover);
+}
+
+.home-stat-card--accent {
+  border-color: var(--color-border-accent);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.home-stat-card--accent:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.home-stat-card--size {
+  border-color: rgba(147, 197, 253, 0.25);
+  background: rgba(147, 197, 253, 0.05);
+}
+
+.home-stat-card--size:hover {
+  background: rgba(147, 197, 253, 0.09);
+}
+
+.home-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.home-stat-badge {
+  font-size: 0.688rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-badge-bg);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.02em;
+}
+
+.home-stat-icon {
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.home-stat-card--accent .home-stat-icon {
+  color: var(--color-accent);
+}
+
+.home-stat-card--size .home-stat-icon {
+  color: var(--color-numeric-meta);
+}
+
+.home-stat-value {
+  font-family: var(--font-numeric);
+  font-size: 2.125rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.home-stat-card--accent .home-stat-value {
+  color: var(--color-accent);
+}
+
+.home-stat-card--size .home-stat-value {
+  color: var(--color-numeric-meta);
+}
+
+/* Split sub-metrics in card */
+.home-stat-split-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+}
+
+.home-stat-subcol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.home-stat-subcol-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--color-border);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.home-stat-subval-number {
+  font-family: var(--font-numeric);
+  font-size: 1.625rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.home-stat-card--accent .home-stat-subcol:first-child .home-stat-subval-number {
+  color: var(--color-accent);
+}
+
+.home-stat-subval-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.home-stat-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .home-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .home-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-title {
+    font-size: 1.625rem;
+  }
+
+  .home-hero {
+    padding: 40px 0 32px;
+  }
+}

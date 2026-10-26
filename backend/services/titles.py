@@ -1,16 +1,111 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import re
 import sys
 import json
+import time
 import subprocess
 from backend.config import BASE_DIR, FOR_AGENTS_DIR, CATALOG_COLS, get_db, compilation_candidate_filter
 
+_stats_cache = None
+_stats_cache_time = 0
+
+def invalidate_catalog_stats_cache():
+    global _stats_cache
+    _stats_cache = None
+
+def _parse_size_gb(size_str):
+    """Parse torrent_size string like '7.99 GB', '562 MB' to float GB."""
+    if not size_str:
+        return None
+    s = str(size_str).replace('\xa0', ' ').replace('\u00a0', ' ').strip()
+    m = re.match(r'([\d.,]+)\s*(GB|MB|TB|KB)', s, re.IGNORECASE)
+    if not m:
+        return None
+    val = float(m.group(1).replace(',', '.'))
+    unit = m.group(2).upper()
+    if unit == 'TB':
+        return val * 1024
+    elif unit == 'GB':
+        return val
+    elif unit == 'MB':
+        return val / 1024
+    elif unit == 'KB':
+        return val / (1024 * 1024)
+    return None
+
+
+def get_catalog_stats():
+    """Return aggregate statistics for the catalog home page."""
+    global _stats_cache, _stats_cache_time
+    now = time.time()
+    if _stats_cache and (now - _stats_cache_time < 300):
+        return _stats_cache
+
+    with get_db(timeout=5) as con:
+        cur = con.cursor()
+        cur.execute("SELECT COUNT(*) FROM topics")
+        topics_count = cur.fetchone()[0]
+        total_releases = topics_count
+
+        # Unique titles identified by Hikka URL
+        cur.execute("SELECT COUNT(DISTINCT LOWER(TRIM(hikka_url))) FROM topics WHERE hikka_url IS NOT NULL AND hikka_url != ''")
+        unique_titles = cur.fetchone()[0]
+
+        # Content types from topics
+        cur.execute("SELECT content_type, COUNT(*) FROM topics GROUP BY content_type")
+        topic_types = dict(cur.fetchall())
+
+        series_ona = topic_types.get('tv', 0) + topic_types.get('ona', 0)
+        movies = topic_types.get('movie', 0) + topic_types.get('movie?', 0)
+        ova_special = topic_types.get('ova', 0) + topic_types.get('special', 0)
+
+        # Subtitles count
+        cur.execute("SELECT COUNT(*) FROM topics WHERE has_sub = 1")
+        subbed = cur.fetchone()[0]
+
+        cur.execute("SELECT torrent_size FROM topics WHERE torrent_size IS NOT NULL AND torrent_size != ''")
+        sizes = cur.fetchall()
+
+    total_gb = 0.0
+    parsed_count = 0
+    for (sz,) in sizes:
+        gb = _parse_size_gb(sz)
+        if gb is not None:
+            total_gb += gb
+            parsed_count += 1
+
+    if total_gb >= 1024:
+        size_str = f"{total_gb / 1024:.1f} ТБ"
+    else:
+        size_str = f"{total_gb:.0f} ГБ"
+
+    res = {
+        "total_releases": total_releases,
+        "topics_count": topics_count,
+        "unique_titles": unique_titles,
+        "dubbed": total_releases,
+        "subbed": subbed,
+        "series_ona": series_ona,
+        "movies": movies,
+        "ova_special": ova_special,
+        "total_size_gb": round(total_gb, 1),
+        "total_size_str": size_str,
+        "sizes_parsed": parsed_count,
+    }
+    _stats_cache = res
+    _stats_cache_time = now
+    return res
+
+
 def rebuild_catalog_async():
     """Trigger background rebuild of data/catalog.js."""
+    invalidate_catalog_stats_cache()
     subprocess.Popen([sys.executable, str(FOR_AGENTS_DIR / "build_catalog_data.py")], cwd=str(BASE_DIR))
 
 def rebuild_catalog_sync():
     """Synchronously rebuild data/catalog.js."""
+    invalidate_catalog_stats_cache()
     return subprocess.run([sys.executable, str(FOR_AGENTS_DIR / "build_catalog_data.py")], cwd=str(BASE_DIR), check=False)
 
 def get_incomplete_stats():

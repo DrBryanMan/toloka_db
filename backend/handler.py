@@ -44,7 +44,8 @@ from backend.services.titles import (
     update_title,
     batch_update_titles,
     delete_title,
-    rebuild_catalog_sync
+    rebuild_catalog_sync,
+    get_catalog_stats,
 )
 from backend.services.fallback import (
     get_fallback_status,
@@ -166,6 +167,14 @@ class AppRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json(item)
                 else:
                     self.send_error_json("Title not found", status=404)
+            except Exception as e:
+                self.send_error_json(str(e), status=500)
+            return
+
+        elif self.path == "/api/stats":
+            try:
+                stats = get_catalog_stats()
+                self.send_json(stats)
             except Exception as e:
                 self.send_error_json(str(e), status=500)
             return

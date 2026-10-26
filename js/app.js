@@ -17,6 +17,8 @@ import { initIncompleteView } from './components/incompleteView.js';
 import { initFallbackModal, openFallbackModal } from './components/fallbackModal.js';
 import { initDeleteModal } from './components/deleteModal.js';
 import { initTheme } from './components/theme.js';
+import { initHomeView, renderHomeStats } from './components/homeView.js';
+import { initSearchModal } from './components/searchModal.js';
 import { 
   initRouter, 
   getActiveView, 
@@ -29,6 +31,7 @@ import {
 
 // Registry of custom select components
 const customSelects = {};
+let searchModalComponent = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
@@ -102,6 +105,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initDeleteModal();
   initRouter();
 
+  // Initialize Home View
+  initHomeView({ onGoCatalog: () => navigateTo(VIEWS.CATALOG) });
+
   // Initialize State
   state.init(catalogData);
 
@@ -124,16 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Setup DOM Elements
-  const searchContainer = document.getElementById('search-container');
-  const searchInput = document.getElementById('search-input');
-  const searchClearBtn = document.getElementById('search-clear-btn');
-  const btnSearchMobileTrigger = document.getElementById('btn-search-mobile-trigger');
-  const searchModal = document.getElementById('search-modal');
-  const searchModalInput = document.getElementById('search-modal-input');
-  const searchModalClear = document.getElementById('search-modal-clear');
-  const searchModalClose = document.getElementById('search-modal-close');
-  const searchModalResults = document.getElementById('search-modal-results');
-  const searchModalFooter = document.getElementById('search-modal-footer');
+  const catalogSearchInput = document.getElementById('catalog-search-input');
+  const catalogSearchClear = document.getElementById('catalog-search-clear');
   const totalCountEl = document.getElementById('header-total-count');
   const catalogGrid = document.getElementById('catalog-grid');
   const catalogTableWrap = document.getElementById('catalog-table-wrap');
@@ -159,172 +157,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Mobile Centered Search Dialog Modal
-  function renderSearchModalResults(query) {
-    if (!searchModalResults) return;
-    const cleanQuery = (query || '').trim().toLowerCase();
+  // Search Modal Dialog Component
+  searchModalComponent = initSearchModal({
+    onSelectTitle: (item) => openTitleModal(item),
+    onApplyQuery: (query) => {
+      navigateTo(VIEWS.CATALOG);
+      state.setSearchQuery(query);
+      if (catalogSearchInput) catalogSearchInput.value = query;
+      if (catalogSearchClear) catalogSearchClear.classList.toggle('visible', Boolean(query));
+    },
+    getCurrentQuery: () => state.searchQuery || (catalogSearchInput ? catalogSearchInput.value : '') || '',
+  });
 
-    if (!cleanQuery) {
-      searchModalResults.innerHTML = `
-        <div class="search-modal-empty">
-          Почніть вводити назву, режисера або команду озвучення для швидкого пошуку...
-        </div>
-      `;
-      if (searchModalFooter) {
-        searchModalFooter.innerHTML = '';
-      }
-      return;
-    }
+  // Header Center Navigation
+  const btnNavHome = document.getElementById('btn-nav-home');
+  const btnNavCatalog = document.getElementById('btn-nav-catalog');
 
-    const terms = cleanQuery.split(/\s+/).filter(Boolean);
-    const allTitles = window.TOLOKA_CATALOG?.titles || [];
-    const matched = [];
+  if (btnNavHome) btnNavHome.addEventListener('click', () => navigateTo(VIEWS.HOME));
+  if (btnNavCatalog) btnNavCatalog.addEventListener('click', () => navigateTo(VIEWS.CATALOG));
 
-    for (const item of allTitles) {
-      const corpus = `${item.title_ua || ''} ${item.title_orig || ''} ${item.raw_title || ''} ${item.director || ''} ${item.studio || ''} ${item.uploader || ''} ${(item.teams || []).join(' ')} ${item.id}`.toLowerCase();
-      let match = true;
-      for (const t of terms) {
-        if (!corpus.includes(t)) {
-          match = false;
-          break;
-        }
-      }
-      if (match) {
-        matched.push(item);
-      }
-    }
-
-    if (matched.length === 0) {
-      searchModalResults.innerHTML = `
-        <div class="search-modal-empty">Нічого не знайдено за запитом &laquo;${escapeHtml(query)}&raquo;</div>
-      `;
-      if (searchModalFooter) {
-        searchModalFooter.innerHTML = '';
-      }
-      return;
-    }
-
-    const limit = 30;
-    const topMatches = matched.slice(0, limit);
-
-    searchModalResults.innerHTML = topMatches.map((item) => {
-      const posterSrc = item.local_poster || item.poster || getSvgPlaceholder(item.title_ua);
-      const yearStr = item.year ? `${item.year}` : '';
-      const epsStr = item.episodes ? `${item.episodes} сер.` : '';
-      const typeStr = item.type === 'movie' ? 'Фільм' : (item.type === 'movie?' ? 'Фільм?' : (item.type === 'ova' ? 'OVA' : (item.type === 'ona' ? 'ONA' : 'Серіал')));
-
-      return `
-        <div class="search-modal-item" data-id="${item.id}" role="button" tabindex="0">
-          <img class="search-modal-thumb" src="${escapeHtml(posterSrc)}" alt="${escapeHtml(item.title_ua)}" loading="lazy">
-          <div class="search-modal-info">
-            <div class="search-modal-title-ua">${escapeHtml(item.title_ua)}</div>
-            ${item.title_orig ? `<div class="search-quick-title-orig">${escapeHtml(item.title_orig)}</div>` : ''}
-            <div class="search-modal-meta">
-              ${yearStr ? `<span class="search-modal-year">${yearStr}</span>` : ''}
-              <div class="search-modal-badges">
-                <span class="search-modal-badge">${typeStr}</span>
-                ${item.quality ? `<span class="search-modal-badge">${escapeHtml(item.quality)}</span>` : ''}
-                ${epsStr ? `<span class="search-modal-badge">${epsStr}</span>` : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    // Attach click listeners to rendered items
-    searchModalResults.querySelectorAll('.search-modal-item').forEach((itemEl) => {
-      itemEl.addEventListener('click', () => {
-        const id = parseInt(itemEl.dataset.id, 10);
-        const item = allTitles.find(t => t.id === id);
-        if (item) {
-          if (searchModal && searchModal.open) searchModal.close();
-          openTitleModal(item);
-        }
-      });
-    });
-
-    if (searchModalFooter) {
-      const total = matched.length;
-      searchModalFooter.innerHTML = `
-        <span>Знайдено: <strong class="search-modal-footer-count">${formatNumber(total)}</strong> ${total === 1 ? 'тайтл' : 'тайтлів'}</span>
-        <button type="button" class="btn-search-goto-catalog" id="btn-search-modal-apply">Застосувати до каталогу &rarr;</button>
-      `;
-
-      const applyBtn = searchModalFooter.querySelector('#btn-search-modal-apply');
-      if (applyBtn) {
-        applyBtn.addEventListener('click', () => {
-          if (searchModal && searchModal.open) searchModal.close();
-          navigateTo(VIEWS.CATALOG);
-          state.setSearchQuery(query);
-          if (searchInput) searchInput.value = query;
-          if (searchClearBtn) searchClearBtn.classList.toggle('visible', Boolean(query));
-        });
-      }
-    }
-  }
-
-  const debouncedSearchModal = debounce((q) => {
-    renderSearchModalResults(q);
-    if (getActiveView() === VIEWS.CATALOG) {
-      state.setSearchQuery(q);
-      if (searchInput) {
-        searchInput.value = q;
-        if (searchClearBtn) searchClearBtn.classList.toggle('visible', Boolean(q));
-      }
-    }
+  // Catalog Inline Search (filters catalog grid directly)
+  const handleCatalogSearch = debounce((val) => {
+    state.setSearchQuery(val);
   }, 120);
 
-  if (btnSearchMobileTrigger && searchModal) {
-    btnSearchMobileTrigger.addEventListener('click', () => {
-      searchModal.showModal();
-      const currentQuery = state.searchQuery || (searchInput ? searchInput.value : '') || '';
-      if (searchModalInput) {
-        searchModalInput.value = currentQuery;
-        if (searchModalClear) searchModalClear.classList.toggle('visible', Boolean(currentQuery));
-        setTimeout(() => searchModalInput.focus(), 60);
-      }
-      renderSearchModalResults(currentQuery);
-    });
-  }
-
-  if (searchModalInput) {
-    searchModalInput.addEventListener('input', (e) => {
+  if (catalogSearchInput) {
+    catalogSearchInput.addEventListener('input', (e) => {
       const val = e.target.value;
-      if (searchModalClear) searchModalClear.classList.toggle('visible', val.length > 0);
-      debouncedSearchModal(val);
+      if (catalogSearchClear) catalogSearchClear.classList.toggle('visible', val.length > 0);
+      handleCatalogSearch(val);
     });
   }
 
-  if (searchModalClear) {
-    searchModalClear.addEventListener('click', () => {
-      if (searchModalInput) {
-        searchModalInput.value = '';
-        searchModalClear.classList.remove('visible');
-        searchModalInput.focus();
+  if (catalogSearchClear) {
+    catalogSearchClear.addEventListener('click', () => {
+      if (catalogSearchInput) {
+        catalogSearchInput.value = '';
+        catalogSearchClear.classList.remove('visible');
+        catalogSearchInput.focus();
       }
-      renderSearchModalResults('');
-      if (getActiveView() === VIEWS.CATALOG) {
-        state.setSearchQuery('');
-        if (searchInput) {
-          searchInput.value = '';
-          if (searchClearBtn) searchClearBtn.classList.remove('visible');
-        }
-      }
-    });
-  }
-
-  if (searchModalClose && searchModal) {
-    searchModalClose.addEventListener('click', () => {
-      searchModal.close();
-    });
-  }
-
-  if (searchModal) {
-    searchModal.addEventListener('click', (e) => {
-      if (e.target === searchModal) {
-        searchModal.close();
-      }
+      state.setSearchQuery('');
     });
   }
 
@@ -405,19 +277,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSortControl();
 
   function syncControlsFromState(appState) {
-    if (searchInput) {
-      searchInput.value = appState.searchQuery || '';
-      searchClearBtn.classList.toggle('visible', Boolean(appState.searchQuery));
-    }
-    if (btnSearchMobileTrigger) {
-      btnSearchMobileTrigger.classList.toggle('has-query', Boolean(appState.searchQuery));
-    }
-    if (searchModalInput && document.activeElement !== searchModalInput) {
-      searchModalInput.value = appState.searchQuery || '';
-      if (searchModalClear) {
-        searchModalClear.classList.toggle('visible', Boolean(appState.searchQuery));
+    if (catalogSearchInput) {
+      catalogSearchInput.value = appState.searchQuery || '';
+      if (catalogSearchClear) {
+        catalogSearchClear.classList.toggle('visible', Boolean(appState.searchQuery));
       }
     }
+    searchModalComponent?.syncQuery(appState.searchQuery);
     if (customSelects['custom-select-year']) {
       customSelects['custom-select-year'].setValue(appState.selectedYear || '');
     }
@@ -499,235 +365,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Quick Search Dropdown Elements (for non-catalog views)
-  const quickDropdown = document.getElementById('search-quick-dropdown');
-  const quickResults = document.getElementById('search-quick-results');
-  const quickFooter = document.getElementById('search-quick-footer');
-  let selectedQuickIndex = -1;
-
-  function updateQuickActiveItem(items, index) {
-    items.forEach((item, idx) => {
-      const isSelected = idx === index;
-      item.classList.toggle('active', isSelected);
-      item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-      if (isSelected) {
-        item.scrollIntoView({ block: 'nearest' });
-      }
-    });
-  }
-
-  function renderQuickSearch(query) {
-    if (!quickDropdown || !quickResults) return;
-    const cleanQuery = query.trim().toLowerCase();
-    if (!cleanQuery) {
-      quickDropdown.hidden = true;
-      selectedQuickIndex = -1;
-      return;
-    }
-
-    const terms = cleanQuery.split(/\s+/).filter(Boolean);
-    const allTitles = window.TOLOKA_CATALOG?.titles || [];
-
-    const matched = [];
-    for (const item of allTitles) {
-      const corpus = `${item.title_ua || ''} ${item.title_orig || ''} ${item.raw_title || ''} ${item.director || ''} ${item.studio || ''} ${item.uploader || ''} ${(item.teams || []).join(' ')} ${item.id}`.toLowerCase();
-      let match = true;
-      for (const t of terms) {
-        if (!corpus.includes(t)) {
-          match = false;
-          break;
-        }
-      }
-      if (match) {
-        matched.push(item);
-      }
-    }
-
-    selectedQuickIndex = -1;
-
-    if (matched.length === 0) {
-      quickResults.innerHTML = `<div class="search-quick-empty">Нічого не знайдено за запитом &laquo;${escapeHtml(query)}&raquo;</div>`;
-      if (quickFooter) quickFooter.innerHTML = '';
-      quickDropdown.hidden = false;
-      return;
-    }
-
-    const limit = 8;
-    const topMatches = matched.slice(0, limit);
-
-    quickResults.innerHTML = topMatches.map((item, idx) => {
-      const posterSrc = item.local_poster || item.poster || getSvgPlaceholder(item.title_ua);
-      const yearStr = item.year ? `${item.year}` : '';
-      const epsStr = item.episodes ? `${item.episodes} сер.` : '';
-      const uploaderStr = item.uploader ? escapeHtml(item.uploader) : '';
-      const typeStr = item.type === 'movie' ? 'Фільм' : (item.type === 'movie?' ? 'Фільм?' : (item.type === 'ova' ? 'OVA' : (item.type === 'ona' ? 'ONA' : 'Серіал')));
-
-      const metaParts = [typeStr, yearStr, epsStr, uploaderStr].filter(Boolean).map(p => `<span>${p}</span>`).join(' • ');
-
-      return `
-        <div class="search-quick-item" data-id="${item.id}" role="option" tabindex="0">
-          <img class="search-quick-thumb" src="${escapeHtml(posterSrc)}" alt="${escapeHtml(item.title_ua)}" loading="lazy">
-          <div class="search-quick-info">
-            <div class="search-quick-title-ua" title="${escapeHtml(item.title_ua)}">${escapeHtml(item.title_ua)}</div>
-            ${item.title_orig ? `<div class="search-quick-title-orig">${escapeHtml(item.title_orig)}</div>` : ''}
-            <div class="search-quick-meta">${metaParts}</div>
-          </div>
-          <div class="search-quick-id">#${item.id}</div>
-        </div>
-      `;
-    }).join('');
-
-    // Attach click and hover listeners to items
-    const renderedItems = quickResults.querySelectorAll('.search-quick-item');
-    renderedItems.forEach((itemEl, idx) => {
-      itemEl.addEventListener('mouseenter', () => {
-        selectedQuickIndex = idx;
-        updateQuickActiveItem(renderedItems, selectedQuickIndex);
-      });
-      itemEl.addEventListener('click', () => {
-        const id = parseInt(itemEl.dataset.id, 10);
-        const item = allTitles.find(t => t.id === id);
-        if (item) {
-          quickDropdown.hidden = true;
-          selectedQuickIndex = -1;
-          openTitleModal(item);
-        }
-      });
-    });
-
-    if (quickFooter) {
-      const total = matched.length;
-      quickFooter.innerHTML = `
-        <span>Знайдено: ${formatNumber(total)} ${total === 1 ? 'тайтл' : 'тайтлів'}</span>
-        <button type="button" class="btn-search-goto-catalog" id="btn-search-goto-catalog">Перейти до каталогу &rarr;</button>
-      `;
-
-      const gotoBtn = quickFooter.querySelector('#btn-search-goto-catalog');
-      if (gotoBtn) {
-        gotoBtn.addEventListener('click', () => {
-          quickDropdown.hidden = true;
-          selectedQuickIndex = -1;
-          navigateTo(VIEWS.CATALOG);
-          state.setSearchQuery(query);
-        });
-      }
-    }
-
-    quickDropdown.hidden = false;
-  }
-
-  const debouncedQuickSearch = debounce((q) => {
-    renderQuickSearch(q);
-  }, 120);
-
-  // Search Input Handler (Debounced)
-  const handleSearch = debounce((val) => {
-    state.setSearchQuery(val);
-  }, 120);
-
-  searchInput.addEventListener('input', (e) => {
-    const val = e.target.value;
-    searchClearBtn.classList.toggle('visible', val.length > 0);
-
-    const activeView = getActiveView();
-    if (activeView === VIEWS.CATALOG) {
-      if (quickDropdown) quickDropdown.hidden = true;
-      selectedQuickIndex = -1;
-      handleSearch(val);
-    } else {
-      debouncedQuickSearch(val);
-    }
-  });
-
-  searchInput.addEventListener('keydown', (e) => {
-    const isDropdownVisible = quickDropdown && !quickDropdown.hidden;
-
-    // Arrow keys navigate within quick dropdown results
-    if (isDropdownVisible) {
-      const items = quickResults.querySelectorAll('.search-quick-item');
-      if (items.length > 0) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          selectedQuickIndex = (selectedQuickIndex + 1) % items.length;
-          updateQuickActiveItem(items, selectedQuickIndex);
-          return;
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          selectedQuickIndex = (selectedQuickIndex - 1 + items.length) % items.length;
-          updateQuickActiveItem(items, selectedQuickIndex);
-          return;
-        }
-      }
-    }
-
-    if (e.key === 'Enter') {
-      const activeView = getActiveView();
-      if (activeView !== VIEWS.CATALOG) {
-        e.preventDefault();
-        // If an item is highlighted via keyboard, open its modal
-        if (isDropdownVisible && selectedQuickIndex >= 0) {
-          const items = quickResults.querySelectorAll('.search-quick-item');
-          const activeItem = items[selectedQuickIndex];
-          if (activeItem) {
-            const id = parseInt(activeItem.dataset.id, 10);
-            const allTitles = window.TOLOKA_CATALOG?.titles || [];
-            const item = allTitles.find(t => t.id === id);
-            if (item) {
-              quickDropdown.hidden = true;
-              selectedQuickIndex = -1;
-              openTitleModal(item);
-              return;
-            }
-          }
-        }
-        // Otherwise switch to catalog view with current search term
-        const val = searchInput.value;
-        if (quickDropdown) quickDropdown.hidden = true;
-        selectedQuickIndex = -1;
-        navigateTo(VIEWS.CATALOG);
-        state.setSearchQuery(val);
-      }
-    }
-  });
-
-  searchClearBtn.addEventListener('click', () => {
-    searchInput.value = '';
-    searchClearBtn.classList.remove('visible');
-    if (quickDropdown) quickDropdown.hidden = true;
-    selectedQuickIndex = -1;
-    state.setSearchQuery('');
-    searchInput.focus();
-  });
-
-  // Close quick dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-container')) {
-      if (quickDropdown) {
-        quickDropdown.hidden = true;
-        selectedQuickIndex = -1;
-      }
-    }
-  });
-
-  // Close quick dropdown on route change
-  onRouteChanged(() => {
-    if (quickDropdown) {
-      quickDropdown.hidden = true;
-      selectedQuickIndex = -1;
-    }
-  });
-
-  // Keyboard shortcut: '/' to focus search, Escape to dismiss
-  window.addEventListener('keydown', (e) => {
-    if (e.key === '/' && document.activeElement !== searchInput) {
-      e.preventDefault();
-      searchInput.focus();
-    }
-    if (e.key === 'Escape') {
-      if (quickDropdown && !quickDropdown.hidden) {
-        quickDropdown.hidden = true;
-        selectedQuickIndex = -1;
-      }
+  // Route change listener to update header nav & load home statistics
+  onRouteChanged((view) => {
+    if (btnNavHome) btnNavHome.classList.toggle('active', view === VIEWS.HOME);
+    if (btnNavCatalog) btnNavCatalog.classList.toggle('active', view === VIEWS.CATALOG);
+    if (view === VIEWS.HOME) {
+      renderHomeStats();
     }
   });
 
@@ -763,18 +406,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Brand Home click handler: resets catalog filters or navigates to catalog
+  // Brand Home click handler: navigates to home view
   const btnBrandHome = document.getElementById('btn-brand-home');
   if (btnBrandHome) {
     btnBrandHome.addEventListener('click', () => {
-      if (getActiveView() === VIEWS.CATALOG) {
-        if (state.getActiveFilterCount() > 0 || state.searchQuery || state.currentPage > 1 || state.sortOrder !== 'id_desc') {
-          resetAllFilters();
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        navigateTo(VIEWS.CATALOG);
-      }
+      navigateTo(VIEWS.HOME);
     });
   }
 
@@ -788,6 +424,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initial trigger
   state.notify();
+
+  // Initial nav state & stats
+  const initialView = getActiveView();
+  if (btnNavHome) btnNavHome.classList.toggle('active', initialView === VIEWS.HOME);
+  if (btnNavCatalog) btnNavCatalog.classList.toggle('active', initialView === VIEWS.CATALOG);
+  if (initialView === VIEWS.HOME) {
+    renderHomeStats();
+  }
 
   // If initial URL contains title id, open its modal
   if (initialUrlParams.id) {
@@ -1612,14 +1256,12 @@ function updateActiveFilters(container, appState) {
 }
 
 function resetAllFilters() {
-  document.getElementById('search-input').value = '';
-  document.getElementById('search-clear-btn').classList.remove('visible');
-  const btnSearchMobileTrigger = document.getElementById('btn-search-mobile-trigger');
-  if (btnSearchMobileTrigger) btnSearchMobileTrigger.classList.remove('has-query');
-  const searchModalInput = document.getElementById('search-modal-input');
-  if (searchModalInput) searchModalInput.value = '';
-  const searchModalClear = document.getElementById('search-modal-clear');
-  if (searchModalClear) searchModalClear.classList.remove('visible');
+  const catalogSearchInput = document.getElementById('catalog-search-input');
+  if (catalogSearchInput) catalogSearchInput.value = '';
+  const catalogSearchClear = document.getElementById('catalog-search-clear');
+  if (catalogSearchClear) catalogSearchClear.classList.remove('visible');
+
+  searchModalComponent?.reset();
   
   for (const selId in customSelects) {
     customSelects[selId].reset();

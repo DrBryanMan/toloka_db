@@ -1,0 +1,380 @@
+/* Search Modal Dialog & Catalog Inline Search */
+
+/* Search open button in header */
+.btn-search-open {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-search-open:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-bright);
+  color: var(--color-text-primary);
+}
+
+.btn-search-open:active {
+  transform: scale(0.96);
+}
+
+/* Search Modal Dialog */
+dialog.search-modal {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  max-width: 680px;
+  max-height: calc(100vh - 120px);
+  padding: 0;
+  border: 1px solid var(--color-border-bright);
+  border-radius: var(--radius-lg);
+  background: var(--color-dropdown-bg);
+  color: var(--color-text-primary);
+  backdrop-filter: var(--blur-base);
+  -webkit-backdrop-filter: var(--blur-base);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--color-border-bright);
+  overflow: hidden;
+  outline: none;
+  z-index: 2100;
+  margin: 0;
+}
+
+dialog.search-modal::backdrop {
+  background: rgba(4, 7, 13, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.search-modal-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+}
+
+.search-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.search-modal-input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-modal-icon {
+  position: absolute;
+  left: 13px;
+  width: 17px;
+  height: 17px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.search-modal-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 42px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
+  font-size: 0.938rem;
+  font-weight: 400;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.search-modal-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+  background: var(--color-surface-solid);
+}
+
+.search-modal-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-modal-input::-webkit-search-cancel-button,
+.search-modal-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.search-modal-clear {
+  position: absolute;
+  right: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-xs);
+  background: var(--color-clear-btn-bg);
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+  transition: all var(--transition-fast);
+}
+
+.search-modal-clear.visible {
+  display: flex;
+}
+
+.search-modal-clear:hover {
+  background: var(--color-border-bright);
+  color: var(--color-text-primary);
+}
+
+.search-modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.search-modal-close-btn:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-bright);
+  color: var(--color-text-primary);
+}
+
+.search-modal-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.search-modal-results {
+  flex: 1;
+}
+
+.search-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.search-modal-item:hover,
+.search-modal-item:focus-visible {
+  background: var(--color-surface-hover);
+}
+
+.search-modal-item:last-child {
+  border-bottom: none;
+}
+
+.search-modal-thumb {
+  width: 40px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.search-modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.search-modal-title-ua {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.search-modal-year {
+  font-family: var(--font-numeric);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.search-modal-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.search-modal-badge {
+  font-size: 0.688rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--color-badge-bg);
+  color: var(--color-badge-text);
+}
+
+.search-modal-empty {
+  padding: 36px 20px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.search-modal-footer {
+  padding: 10px 16px;
+  background: var(--color-dropdown-footer-bg);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.search-modal-footer-count {
+  font-family: var(--font-numeric);
+  color: var(--color-accent);
+}
+
+/* Catalog Inline Search */
+.catalog-search-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: -4px;
+}
+
+.catalog-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 540px;
+}
+
+.catalog-search-icon {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.catalog-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 38px 0 42px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
+  font-size: 0.875rem;
+  font-weight: 400;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.catalog-search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.catalog-search-input::-webkit-search-cancel-button,
+.catalog-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.catalog-search-input:hover {
+  border-color: var(--color-border-bright);
+  background: var(--color-surface-hover);
+}
+
+.catalog-search-input:focus {
+  background: var(--color-surface-solid);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.catalog-search-input:focus ~ .catalog-search-icon {
+  color: var(--color-accent);
+}
+
+.catalog-search-clear {
+  position: absolute;
+  right: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  background: var(--color-clear-btn-bg);
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+  transition: all var(--transition-fast);
+}
+
+.catalog-search-clear.visible {
+  display: flex;
+}
+
+.catalog-search-clear:hover {
+  background: var(--color-border-bright);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  dialog.search-modal {
+    top: 62px;
+    max-height: calc(100vh - 82px);
+  }
+
+  .catalog-search-wrap {
+    max-width: 100%;
+  }
+}

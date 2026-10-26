@@ -789,6 +789,9 @@ export function initParserView() {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  loadIncompleteStats();
-  loadCompilationStats();
+  const isStaticHost = window.location.protocol === 'file:' || window.location.hostname.endsWith('github.io');
+  if (!isStaticHost) {
+    loadIncompleteStats();
+    loadCompilationStats();
+  }
 }
